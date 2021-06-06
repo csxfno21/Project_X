@@ -1,0 +1,32 @@
+//
+//  SOSTableViewCell.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-7.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "LinkLabel.h"
+@protocol SOSTableViewCellDelegate <NSObject>
+
+-(void)sOSCellAction:(int )index;
+@end
+
+
+@interface SOSTableViewCell : UITableViewCell<LinkLabelDelegate>
+{
+    UIImageView *imgView;
+    UILabel     *contentLabel;
+    UILabel     *numberLabel;
+    UILabel     *alarmLabel;
+    LinkLabel   *phoneNumLabel;
+    id<SOSTableViewCellDelegate> celldelegate;
+}
+@property(assign, nonatomic) id<SOSTableViewCellDelegate>  celldelegate;
+@property(nonatomic, retain) UIImageView *imgView;
+@property(nonatomic, retain) UILabel     *contentLabel;
+@property(nonatomic, retain) UILabel     *numberLabel;
+@property(nonatomic, retain) UILabel     *alarmLabel;
+@property(nonatomic, retain) LinkLabel   *phoneNumLabel;
+@end

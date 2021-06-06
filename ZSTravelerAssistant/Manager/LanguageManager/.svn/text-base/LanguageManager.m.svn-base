@@ -1,0 +1,107 @@
+//
+//  LanguageManager.m
+//  Tourism
+//
+//  Created by yandaoqiu on 13-4-2.
+//  Copyright (c) 2013年 szmap. All rights reserved.
+//
+
+#import "LanguageManager.h"
+#import "Language.h"
+static LanguageManager *manager;
+@implementation LanguageManager
+- (id)init
+{
+    if(self = [super init])
+    {
+        language = UNKNOW;
+        languageNotifications = [[NSMutableArray alloc]init];
+    }
+    return self;
+}
++(id)allocWithZone:(NSZone *)zone
+{
+    @synchronized(self)
+    {
+        if (manager == nil)
+        {
+            manager = [super allocWithZone:zone];
+            return manager;
+        }
+    }
+    return nil; 
+}
++(LanguageManager*)sharedInstanced
+{
+
+    @synchronized(self)
+    {
+        if(manager == nil)
+        {
+            manager = [[LanguageManager alloc] init];
+        }
+    }
+    return manager;
+}
+
+- (void)setCurrentLanguage:(Language_Type)languageType
+{
+    if(language != languageType)
+    {
+        language = languageType;
+        [Language resetLanguageCache];
+        for(int i = 0;i<languageNotifications.count;i++)
+        {
+            id<LanguageManagerDelegate> delegate = (id)[[languageNotifications objectAtIndex:i] longValue];
+            if(delegate && [delegate respondsToSelector:@selector(notifiChangelanguage)])
+            {
+                [delegate notifiChangelanguage];
+            }
+        }
+    }
+    
+}
+
+- (Language_Type)currentLanguage
+{
+    return language;
+}
+
++(void)freeInstance
+{
+    manager = nil;
+}
+
+#pragma mark
+#pragma mark register/unregister languageNotification
+
+- (void)registerLanugageNotification:(id<LanguageManagerDelegate>)delegate
+{
+    if(delegate)
+    {
+        NSNumber *number = POINT2NUMBER(delegate);
+        if (![languageNotifications containsObject:number])
+        {
+            [languageNotifications addObject:number];
+        }
+        
+    }
+    
+}
+
+- (void)unRegisterLanugageNotification:(id<LanguageManagerDelegate>)delegate
+{
+    if(delegate)
+    {
+        NSNumber *number = POINT2NUMBER(delegate);
+        [languageNotifications removeObject:number];
+        
+    }
+}
+-(void)dealloc
+{
+    SAFERELEASE(manager)
+    SAFERELEASE(languageNotifications)
+    [super dealloc];
+}
+@end

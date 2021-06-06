@@ -1,0 +1,27 @@
+//
+//  ZS_Traffic_entity.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "ZS_Traffic_entity.h"
+
+@implementation ZS_Traffic_entity
+@synthesize ID,TrafficName,TrafficStartTime,TrafficEndTime,TrafficDetail,TrafficRemark,TrafficPrice,TrafficType;
+
+-(void)dealloc
+{
+
+    SAFERELEASE(TrafficName)
+    SAFERELEASE(TrafficStartTime)
+    SAFERELEASE(TrafficEndTime)
+    SAFERELEASE(TrafficDetail)
+    SAFERELEASE(TrafficRemark)
+    SAFERELEASE(TrafficPrice)
+    SAFERELEASE(TrafficType)
+    [super dealloc];
+}
+
+@end

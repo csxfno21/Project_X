@@ -1,0 +1,30 @@
+//
+//  ZS_PoiRelation_entity.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-9-24.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ZS_PoiRelation_entity : NSObject
+{
+    int        ID;
+    NSString  *PoiID;
+    NSString  *ParentID;
+    NSString  *POITitle;
+    NSString  *POIType;
+    NSString  *POILng;
+    NSString  *POILat;
+    NSString  *POIBuffer;
+}
+@property (nonatomic,assign) int ID;
+@property (nonatomic,retain) NSString *PoiID;
+@property (nonatomic,retain) NSString *ParentID;
+@property (nonatomic,retain) NSString *POITitle;
+@property (nonatomic,retain) NSString *POIType;
+@property (nonatomic,retain) NSString *POILng;
+@property (nonatomic,retain) NSString *POILat;
+@property (nonatomic,retain) NSString *POIBuffer;
+@end

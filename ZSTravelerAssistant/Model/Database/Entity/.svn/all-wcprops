@@ -1,0 +1,173 @@
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/IOS/!svn/ver/798/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity
+END
+ZS_Traffic_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Traffic_entity.m
+END
+ZS_PoiRelation_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_PoiRelation_entity.h
+END
+ZS_TeamChat_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/IOS/!svn/ver/763/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TeamChat_entity.h
+END
+ZS_Around_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Around_entity.h
+END
+ZS_TeamSingleChat_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/IOS/!svn/ver/798/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TeamSingleChat_entity.h
+END
+ZS_PoiRelation_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_PoiRelation_entity.m
+END
+ZS_TeamChat_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/IOS/!svn/ver/763/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TeamChat_entity.m
+END
+ZS_CustomizedSpot_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/IOS/!svn/ver/698/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_CustomizedSpot_entity.h
+END
+ZS_TableVersion_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TableVersion_entity.h
+END
+ZS_Around_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Around_entity.m
+END
+ZS_CommonNav_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_CommonNav_entity.h
+END
+ZS_Scenic_Buffer_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Scenic_Buffer_entity.h
+END
+ZS_TeamSingleChat_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/IOS/!svn/ver/798/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TeamSingleChat_entity.m
+END
+ZS_CustomizedSpot_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/IOS/!svn/ver/698/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_CustomizedSpot_entity.m
+END
+ZS_TableVersion_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TableVersion_entity.m
+END
+ZS_CommonNav_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_CommonNav_entity.m
+END
+ZS_Scenic_Buffer_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Scenic_Buffer_entity.m
+END
+ZS_Infomation_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Infomation_entity.h
+END
+ZS_TeamGroupChat_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/798/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TeamGroupChat_entity.h
+END
+ZS_SpotRoute_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_SpotRoute_entity.h
+END
+ZS_RecommendImg_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_RecommendImg_entity.h
+END
+ZS_Infomation_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Infomation_entity.m
+END
+ZS_TeamGroupChat_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/798/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_TeamGroupChat_entity.m
+END
+ZS_SpotRoute_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_SpotRoute_entity.m
+END
+ZS_SpotSpeak_Entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_SpotSpeak_Entity.h
+END
+ZS_RecommendImg_entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_RecommendImg_entity.m
+END
+ZS_SpotSpeak_Entity.m
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_SpotSpeak_Entity.m
+END
+ZS_Traffic_entity.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/Database/Entity/ZS_Traffic_entity.h
+END

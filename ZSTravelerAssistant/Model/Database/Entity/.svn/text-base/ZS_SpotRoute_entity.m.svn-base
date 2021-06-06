@@ -1,0 +1,31 @@
+//
+//  ZS_SpotRoute_entity.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "ZS_SpotRoute_entity.h"
+
+@implementation ZS_SpotRoute_entity
+@synthesize ID,RouteType,RouteTitle,RouteLength,RouteTime,RouteSmallImgUrl,RouteSmallImgName,RouteList
+,RouteTicket,RouteContent,RouteImageUrl,RouteImageName;
+
+-(void)dealloc
+{
+    SAFERELEASE(RouteType)
+    SAFERELEASE(RouteTitle)
+    SAFERELEASE(RouteLength)
+    SAFERELEASE(RouteTime)
+    SAFERELEASE(RouteSmallImgUrl)
+    SAFERELEASE(RouteSmallImgName)
+    SAFERELEASE(RouteList)
+    SAFERELEASE(RouteTicket)    
+    SAFERELEASE(RouteContent)
+    SAFERELEASE(RouteImageUrl)
+    SAFERELEASE(RouteImageName)
+    [super dealloc];
+}
+
+@end

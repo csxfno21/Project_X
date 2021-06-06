@@ -1,0 +1,656 @@
+//
+//  ChooseSpotListControllerViewController.m
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-8-23.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "ChooseSpotListControllerViewController.h"
+#import <QuartzCore/QuartzCore.h>
+#import "MyNavController.h"
+
+#define MAX_DOUBLE 100000000000
+@interface ChooseSpotListControllerViewController ()
+
+@end
+
+@implementation ChooseSpotListControllerViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        
+    }
+    return self;
+}
+
+- (void)MainDo:(CLLocationCoordinate2D *)currentPoint_p ZSLScenicArray:(NSMutableArray *)ZSLScenicArray MXLScenicArray:(NSMutableArray *)MXLScenicArray LGSScenicArray:(NSMutableArray *)LGSScenicArray ScenicInArray:(NSMutableArray *)ScenicInArray resultArray:(NSMutableArray *)resultArray
+{
+    ZS_CommonNav_entity *zslbestEntrance = [self exportWithSecinc:SCENIC_ZSL];
+    ZS_CommonNav_entity *mxlbestEntrance = [self exportWithSecinc:SCENIC_MXL];
+    ZS_CommonNav_entity *lgsbestEntrance = [self exportWithSecinc:SCENIC_LGS];
+    ZS_CommonNav_entity *tmpbestEntrance = nil;
+    //当前点到3个景区的入口距离
+    double dis1 = [PublicUtils GetDistanceS:[zslbestEntrance.NavLng doubleValue] withlat1:[zslbestEntrance.NavLat doubleValue] withlng2:currentPoint_p->longitude withlat2:currentPoint_p->latitude];
+    if (ZSLScenicArray.count == 0)
+    {
+        dis1 = MAX_DOUBLE;
+    }
+    double dis2 = [PublicUtils GetDistanceS:[mxlbestEntrance.NavLng doubleValue] withlat1:[mxlbestEntrance.NavLat doubleValue] withlng2:currentPoint_p->longitude withlat2:currentPoint_p->latitude];
+    if (MXLScenicArray.count == 0)
+    {
+        dis2 = MAX_DOUBLE;
+    }
+    double dis3 = [PublicUtils GetDistanceS:[lgsbestEntrance.NavLng doubleValue] withlat1:[lgsbestEntrance.NavLat doubleValue] withlng2:currentPoint_p->longitude withlat2:currentPoint_p->latitude];
+    if (LGSScenicArray.count == 0)
+    {
+        dis3 = MAX_DOUBLE;
+    }
+    //当前点到3个景区的入口的最近距离
+    double minDisEntrance = [PublicUtils GetMin:[PublicUtils GetMin:dis1 withDis:dis2] withDis:dis3];
+    if (minDisEntrance == MAX_DOUBLE)       //三大景区的点都已走完，在景区间搜索最近点
+    {
+        //N个景区间景点到当前点的最小距离
+        double minDisToScencIn=MAX_DOUBLE;
+        ZS_CustomizedSpot_entity *MinDisEntity = nil;
+        int minIndex;
+        for (int i = 0; i < ScenicInArray.count; i++)
+        {
+            ZS_CustomizedSpot_entity *entity1 = [ScenicInArray objectAtIndex:i];
+            double disToEntity = [PublicUtils GetDistanceS:[entity1.SpotLng doubleValue] withlat1:[entity1.SpotLat doubleValue] withlng2:currentPoint_p->longitude withlat2:currentPoint_p->latitude];
+            if (minDisToScencIn > disToEntity)
+            {
+                MinDisEntity = entity1;
+                minDisToScencIn = disToEntity;
+                minIndex = i;
+            }
+        }
+        [resultArray addObject:MinDisEntity];
+        [ScenicInArray removeObjectAtIndex:minIndex];
+        currentPoint_p->longitude = [MinDisEntity.SpotLng doubleValue];
+        currentPoint_p->latitude = [MinDisEntity.SpotLat doubleValue];
+    }
+    else        //在三大景区内寻找最近出入口-》最近景区内的点
+    {
+        if (minDisEntrance == dis1)
+        {
+            tmpbestEntrance = zslbestEntrance;
+        }
+        else if (minDisEntrance == dis2)
+        {
+            tmpbestEntrance = mxlbestEntrance;
+        }
+        else
+        {
+            tmpbestEntrance = lgsbestEntrance;
+        }
+        //N个景区间景点到当前点的最小距离
+        double minDisToScencIn=MAX_DOUBLE;
+        ZS_CustomizedSpot_entity *MinDisEntity = nil;
+        int minIndex;
+        for (int i = 0; i < ScenicInArray.count; i++)
+        {
+            ZS_CustomizedSpot_entity *entity1 = [ScenicInArray objectAtIndex:i];
+            double disToEntity = [PublicUtils GetDistanceS:[entity1.SpotLng doubleValue] withlat1:[entity1.SpotLat doubleValue] withlng2:currentPoint_p->longitude withlat2:currentPoint_p->latitude];
+            if (minDisToScencIn > disToEntity)
+            {
+                MinDisEntity = entity1;
+                minDisToScencIn = disToEntity;
+                minIndex = i;
+            }
+        }
+        
+        //3个景区最优入口距离，距离最优入口近
+        if (minDisEntrance < minDisToScencIn)
+        {
+            //最近的一个景区内的所有点
+            NSMutableArray* currentPOIs = nil;
+            if (tmpbestEntrance == zslbestEntrance)
+            {
+                currentPOIs = ZSLScenicArray;
+            }
+            else if (tmpbestEntrance == mxlbestEntrance)
+            {
+                currentPOIs = MXLScenicArray;
+            }
+            else if (tmpbestEntrance == lgsbestEntrance)
+            {
+                currentPOIs = LGSScenicArray;
+            }
+            double minDis = MAX_DOUBLE;
+            double disToEntity;
+            ZS_CustomizedSpot_entity* minDisEntity;
+            int index = 0;
+            int minIndex = -1;
+            //找到离当前点最近的一个景区内的景点
+            for (ZS_CustomizedSpot_entity *entity in currentPOIs)
+            {
+                disToEntity = [PublicUtils GetDistanceS:currentPoint_p->longitude withlat1:currentPoint_p->latitude withlng2:entity.SpotLng.doubleValue withlat2:entity.SpotLat.doubleValue];
+                if (minDis > disToEntity)
+                {
+                    minDisEntity = entity;
+                    minIndex = index;
+                    minDis = disToEntity;
+                }
+                index++;
+            }
+            [resultArray addObject:minDisEntity];
+            [currentPOIs removeObjectAtIndex:minIndex];
+            currentPoint_p->longitude = [minDisEntity.SpotLng doubleValue];
+            currentPoint_p->latitude = [minDisEntity.SpotLat doubleValue];
+        }
+        else        //离景区间的点较近
+        {
+            [resultArray addObject:MinDisEntity];
+            [ScenicInArray removeObjectAtIndex:minIndex];
+            currentPoint_p->longitude = [MinDisEntity.SpotLng doubleValue];
+            currentPoint_p->latitude = [MinDisEntity.SpotLat doubleValue];
+        }
+    }
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downLoadSuccess:) name:DOWNLOAD_IMAGE_SCUUESS object:nil];
+    tableView = [[GMGridView alloc]initWithFrame:contentView.bounds];
+    tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    tableView.backgroundColor = [UIColor clearColor];
+    tableView.style = GMGridViewStyleSwap;
+    tableView.itemSpacing = 10;
+    tableView.centerGrid = YES;
+    tableView.actionDelegate = self;
+    tableView.sortingDelegate = self;
+    tableView.dataSource = self;
+    tableView.delegate = self;
+    //    self.gmTableView.transformDelegate = self;
+    
+    tableView.mainSuperView = contentView;
+    [contentView addSubview:tableView];
+    [self.view sendSubviewToBack:contentView];
+    
+    self.earthLabel.text = [Language stringWithName:NAVIGATION];
+    
+    self.backTitle.text = [Language stringWithName:BACK];
+    
+    if (_data.count == 1)
+    {
+        return;
+    }
+    else
+    {
+        indexArray = [[[NSMutableArray alloc]init]autorelease];
+        NSMutableArray *MXLScenicArray = [NSMutableArray array];
+        NSMutableArray *LGSScenicArray = [NSMutableArray array];
+        NSMutableArray *ZSLScenicArray = [NSMutableArray array];
+        NSMutableArray *ScenicInArray  = [NSMutableArray array];
+        NSMutableArray *resultArray  = [NSMutableArray array];
+        CLLocationCoordinate2D currentPoint;
+        
+        ZS_CustomizedSpot_entity *entity = nil;
+        for (entity in _data)
+        {
+            PoiPoint *point = [PoiPoint pointWithName:entity.SpotName withLongitude:[entity.SpotLng doubleValue] withLatitude:[entity.SpotLat doubleValue] withPoiID:[entity.SpotID intValue]];
+            AGSPoint *gsPoint = [AGSPoint pointWithX:point.longitude y:point.latitude spatialReference:[AGSSpatialReference spatialReferenceWithWKID:4326 WKT:nil]];
+            SCENIC_TYPE scenic = [[MapManager sharedInstanced] currentScenic:gsPoint];
+            
+            //POI和当前位置在同一景区
+            if (SCENIC_MXL == scenic)
+            {
+                [MXLScenicArray addObject:entity];
+            }
+            else if (SCENIC_LGS == scenic)
+            {
+                [LGSScenicArray addObject:entity];
+            }
+            else if (SCENIC_ZSL == scenic)
+            {
+                [ZSLScenicArray addObject:entity];
+            }
+            else
+            {
+                [ScenicInArray addObject:entity];
+            }
+        }
+        currentPoint.longitude = [[MapManager sharedInstanced] oldLocation2D].longitude;
+        currentPoint.latitude = [[MapManager sharedInstanced] oldLocation2D].latitude;
+        //循环判断4大景区内的数据，直到移除完
+        while (MXLScenicArray.count + LGSScenicArray.count + ZSLScenicArray.count + ScenicInArray.count != 0)
+        {
+            AGSPoint *locationPoint = [AGSPoint pointWithX:currentPoint.longitude y:currentPoint.latitude spatialReference:[AGSSpatialReference spatialReferenceWithWKID:4326 WKT:nil]];
+            SCENIC_TYPE currentLocationScenic = [[MapManager sharedInstanced] currentScenic:locationPoint];
+            //当前位置在景区外
+            if(currentLocationScenic == SCENIC_OUT)
+            {
+                return;
+            }
+            else if (currentLocationScenic == SCENIC_IN)    //当前位置在景区间
+            {
+                [self MainDo:&currentPoint ZSLScenicArray:ZSLScenicArray MXLScenicArray:MXLScenicArray LGSScenicArray:LGSScenicArray ScenicInArray:ScenicInArray resultArray:resultArray];                
+
+            }
+            //当前位置在3大景区内
+            else if (currentLocationScenic == SCENIC_MXL || currentLocationScenic == SCENIC_LGS || currentLocationScenic == SCENIC_ZSL)
+            {
+                NSMutableArray* currentPOIs = nil;
+                switch (currentLocationScenic)
+                {
+                    case SCENIC_MXL:
+                        currentPOIs = MXLScenicArray;
+                        break;
+                    case SCENIC_LGS:
+                        currentPOIs = LGSScenicArray;
+                        break;
+                    case SCENIC_ZSL:
+                        currentPOIs = ZSLScenicArray;
+                        break;
+                    default:
+                        break;
+                }
+                //景区内仍有景点
+                if (currentPOIs.count > 0)
+                {
+                    double minDis = MAX_DOUBLE;
+                    double disToEntity;
+                    ZS_CustomizedSpot_entity* minDisEntity;
+                    int index = 0;
+                    int minIndex = -1;
+                    for (ZS_CustomizedSpot_entity *entity in currentPOIs)
+                    {
+                        disToEntity = [PublicUtils GetDistanceS:currentPoint.longitude withlat1:currentPoint.latitude withlng2:entity.SpotLng.doubleValue withlat2:entity.SpotLat.doubleValue];
+                        if (minDis > disToEntity)
+                        {
+                            minDisEntity = entity;
+                            minIndex = index;
+                            minDis = disToEntity;
+                        }
+                        index++;
+                    }
+                    [resultArray addObject:minDisEntity];
+                    [currentPOIs removeObjectAtIndex:minIndex];
+                    currentPoint.longitude = [minDisEntity.SpotLng doubleValue];
+                    currentPoint.latitude = [minDisEntity.SpotLat doubleValue];
+                }
+                else        // 景区内点已走完，查找其它的待游玩景点
+                {
+                    [self MainDo:&currentPoint ZSLScenicArray:ZSLScenicArray MXLScenicArray:MXLScenicArray LGSScenicArray:LGSScenicArray ScenicInArray:ScenicInArray resultArray:resultArray];
+                    
+                }
+
+                
+            }
+        }
+        
+        [_data removeAllObjects];
+        [_data addObjectsFromArray:resultArray];
+        [tableView reloadData];
+    }
+}
+/**
+ *
+ * 查找 poi 所在景区 最优入口
+ * 权重衡量
+ */
+- (ZS_CommonNav_entity*)exportWithSecinc:(int)scenic
+{
+    NSArray *entrances = [[DataAccessManager sharedDataModel] getPOi:scenic withPoiType:POI_ENTRANCE,nil];
+    int index = -1;
+    double minDistance = -1;
+    for (int i = 0; i < entrances.count ; i++)
+    {
+        ZS_CommonNav_entity *enitity = [entrances objectAtIndex:i];
+        double dis = [PublicUtils GetDistanceS:[[MapManager sharedInstanced] oldLocation2D].longitude withlat1:[[MapManager sharedInstanced] oldLocation2D].latitude withlng2:[enitity.NavLng doubleValue] withlat2:[enitity.NavLat doubleValue]];
+        if (minDistance == -1 || minDistance > dis)
+        {
+            index = i;
+            minDistance = dis;
+        }
+    }
+    if (index != -1)
+    {
+        return [entrances objectAtIndex:index];
+    }
+    return nil;
+}
+
+#pragma mark DOWNLOADIMGAECALLBACK
+- (void)downLoadSuccess:(NSNotification*)notification
+{
+    
+}
+- (IBAction)backAction:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+- (void)updateLanguage:(id)sender
+{
+    [tableView reloadData];
+}
+
+#pragma mark scroller 
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    if (tableView)
+    {
+        for (UIView *cellView in tableView.subviews)
+        {
+            if ([cellView isKindOfClass:[GMGridViewCell class]])
+            {
+                GMGridViewCell *animCell = (GMGridViewCell*)cellView;
+                if ([animCell isAnim])
+                {
+                    [animCell stopEdit];
+                    break;
+                }
+            }
+        }
+        [tableView setEditing:NO animated:YES];
+    }
+}
+- (IBAction)earthPlanAction:(id)sender
+{
+    planType = PLAN_ROUTE_SMART_PLAN;
+    CGFloat xWidth = self.view.bounds.size.width - 30.0f;
+    CGFloat yHeight = 300.0f;
+    CGFloat yOffset = (self.view.bounds.size.height - yHeight)/2.0f;
+    RouteNavPopView *popView = [RouteNavPopView instanceRouteNavPopView];
+    popView.frame = CGRectMake(15, yOffset, xWidth, yHeight);
+    ZS_CustomizedSpot_entity *entity = [_data lastObject];
+    if (!entity)
+    {
+        return;
+    }else
+    {
+        [popView setTitleText:entity.SpotName];
+    }
+    popView.delegate = self;
+    [popView show];
+    
+}
+
+
+-(void)routeNavAction:(int)index withType:(int)type
+{
+    NSMutableArray *pointArray = [[[NSMutableArray alloc]init] autorelease];
+    for (ZS_CustomizedSpot_entity *entity in _data)
+    {
+        PoiPoint *point = [PoiPoint pointWithName:entity.SpotName withLongitude:[entity.SpotLng doubleValue] withLatitude:[entity.SpotLat doubleValue] withPoiID:[entity.SpotID intValue]];
+        [pointArray addObject:point];
+    }
+    [[MapManager sharedInstanced] startNavByMany:pointArray withType:index simulation:type withBarriers:@""];
+    MyNavController *controller = [[MyNavController alloc] initWithNibName:@"MyNavController" bundle:nil];
+    [self.navigationController pushViewController:controller animated:YES];
+    SAFERELEASE(controller)
+}
+
+
+
+//////////////////////////////////////////////////////////////
+#pragma mark GMGridViewDataSource
+//////////////////////////////////////////////////////////////
+
+- (NSInteger)numberOfItemsInGMGridView:(GMGridView *)gridView
+{
+    return [self.data count];
+}
+
+- (CGSize)GMGridView:(GMGridView *)gridView sizeForItemsInInterfaceOrientation:(UIInterfaceOrientation)orientation
+{
+    return CGSizeMake(310, 100);
+}
+
+- (GMGridViewCell *)GMGridView:(GMGridView *)gridView cellForItemAtIndex:(NSInteger)index
+{    
+    CGSize size = [self GMGridView:gridView sizeForItemsInInterfaceOrientation:[[UIApplication sharedApplication] statusBarOrientation]];
+    
+    RouteSelfChoseSpotCell *cell = (RouteSelfChoseSpotCell*)[gridView dequeueReusableCell];
+    
+    if (!cell)
+    {
+        cell = [[[RouteSelfChoseSpotCell alloc] init] autorelease];
+        cell.deleteButtonIcon = [UIImage imageNamed:@"close_x.png"];
+        cell.deleteButtonOffset = CGPointMake(-15, -15);
+        
+        UIView *view = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, size.width, size.height)] autorelease];
+        view.backgroundColor = [UIColor clearColor];
+        view.layer.masksToBounds = NO;
+        view.layer.cornerRadius = 8;
+    
+        cell.contentView = view;
+//        cell.delegate = self;
+    }
+    
+    [[cell.contentView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+
+    cell.tag = index;
+    
+    ZS_CustomizedSpot_entity *entity = [self.data objectAtIndex:index];
+    cell.cellTitle.text = entity.SpotName;
+    cell.cellContent.text = entity.SpotContent;
+    if([entity.SpotLength isEqualToString:@""])
+    {
+        cell.disValueLabel.font = [UIFont systemFontOfSize:14];
+        cell.disValueLabel.frame = CGRectMake(160, 72, 35, 20);
+        cell.disValueLabel.text = @"未知";
+        cell.disUnitLabel.hidden = YES;
+    }
+    else
+    {
+        cell.disValueLabel.frame = CGRectMake(150, 71, 35, 20);
+        cell.disValueLabel.font = [UIFont systemFontOfSize:17];
+        cell.disValueLabel.text = entity.SpotLength;
+        cell.disUnitLabel.hidden = NO;
+    }
+    
+    NSString *price = entity.SpotTickets;
+    if ([@"-1" isEqualToString:entity.SpotTickets] || [@"" isEqualToString:entity.SpotTickets])
+    {
+        price = [Language stringWithName:FREE];
+        cell.priceUnitLabel.hidden = YES;
+        cell.priceValueLabel.frame = CGRectMake(242, 71, 60, 20);
+    }else
+    {
+        cell.priceValueLabel.text = entity.SpotTickets;
+        cell.priceUnitLabel.hidden = NO;
+        cell.priceValueLabel.frame = CGRectMake(249, 71, 30, 20);
+    }
+    cell.priceValueLabel.text = price;
+    
+    
+    UIImage *image = [[NetFileLoadManager sharedInstanced] loadImageByURL:entity.SpotSmallUrl withDelegate:self withID:entity.ID withImgName:entity.SpotSmallImgName withCmdcode:CC_DOWN_IMAGE_SPOT_SMALL];
+    if(image)
+    {
+        [cell.cellRecomdImgView setImage:image];
+        [cell.loadingView stopAnimating];
+    }
+    else
+    {
+        [cell.loadingView startAnimating];
+    }
+    return cell;
+}
+
+
+- (BOOL)GMGridView:(GMGridView *)gridView canDeleteItemAtIndex:(NSInteger)index
+{
+    return YES; //index % 2 == 0;
+}
+
+//////////////////////////////////////////////////////////////
+#pragma mark GMGridViewActionDelegate
+//////////////////////////////////////////////////////////////
+
+- (void)GMGridView:(GMGridView *)gridView didTapOnItemAtIndex:(NSInteger)position
+{
+    //    NSLog(@"Did tap at index %d", position);
+}
+
+- (void)GMGridViewDidTapOnEmptySpace:(GMGridView *)gridView
+{
+    //    NSLog(@"Tap on empty space");
+    if (gridView)
+    {
+        for (UIView *cellView in gridView.subviews)
+        {
+            if ([cellView isKindOfClass:[GMGridViewCell class]])
+            {
+                GMGridViewCell *animCell = (GMGridViewCell*)cellView;
+                if ([animCell isAnim])
+                {
+                    [animCell stopEdit];
+                    break;
+                }
+            }
+        }
+        [gridView setEditing:NO animated:YES];
+    }
+}
+
+- (void)GMGridView:(GMGridView *)gridView processShowDetailActionForItemAtIndex:(NSInteger)index
+{
+    if (gridView)
+    {
+        for (UIView *cellView in gridView.subviews)
+        {
+            if ([cellView isKindOfClass:[GMGridViewCell class]])
+            {
+                GMGridViewCell *animCell = (GMGridViewCell*)cellView;
+                if ([animCell isAnim])
+                {
+                    [animCell stopEdit];
+                    break;
+                }
+            }
+        }
+        [gridView setEditing:NO animated:YES];
+    }
+    
+    [self removeSpotNotification:index];
+    
+}
+- (void)GMGridView:(GMGridView *)gridView processDeleteActionForItemAtIndex:(NSInteger)index
+{
+    [self removeSpotNotification:index];
+
+}
+- (void)removeSpotNotification:(int)index
+{
+    ZS_CustomizedSpot_entity *entity = [_data objectAtIndex:index];
+    if (entity)
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_REMOVE_SPOT object:INTTOOBJ(entity.SpotID.intValue)];
+        [_data removeObjectAtIndex:index];
+        [tableView reloadData];
+    }
+    if (self.data.count == 0)
+    {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+}
+//////////////////////////////////////////////////////////////
+#pragma mark GMGridViewSortingDelegate
+//////////////////////////////////////////////////////////////
+
+- (void)GMGridView:(GMGridView *)gridView didStartMovingCell:(GMGridViewCell *)cell
+{
+    [UIView animateWithDuration:0.3
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                         cell.backgroundColor = [UIColor orangeColor];
+                         //                         cell.contentView.alpha = 0.5;
+                         cell.layer.shadowOpacity = 0.7;
+                     }
+                     completion:nil
+     ];
+}
+
+- (void)GMGridView:(GMGridView *)gridView didEndMovingCell:(GMGridViewCell *)cell
+{
+    [UIView animateWithDuration:0.3
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                         cell.backgroundColor = [UIColor clearColor];
+                         cell.layer.shadowOpacity = 0;
+                         //                         cell.contentView.alpha = 1.0;
+                     }
+                     completion:nil
+     ];
+}
+
+- (BOOL)GMGridView:(GMGridView *)gridView shouldAllowShakingBehaviorWhenMovingCell:(GMGridViewCell *)cell atIndex:(NSInteger)index
+{
+    return YES;
+}
+
+- (void)GMGridView:(GMGridView *)gridView moveItemAtIndex:(NSInteger)oldIndex toIndex:(NSInteger)newIndex
+{
+    //    NSLog(@"---- %d,%d",oldIndex,newIndex);
+}
+
+- (void)GMGridView:(GMGridView *)gridView exchangeItemAtIndex:(NSInteger)index1 withItemAtIndex:(NSInteger)index2
+{
+    //    NSLog(@"----exchangeItemAtIndex %d,%d",index1,index2);
+    [self.data exchangeObjectAtIndex:index1 withObjectAtIndex:index2];
+}
+
+- (void)GMGridView:(GMGridView *)gridView didStartTransformingCell:(GMGridViewCell *)cell
+{
+    [UIView animateWithDuration:0.5
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                         cell.contentView.backgroundColor = [UIColor blueColor];
+                         cell.contentView.layer.shadowOpacity = 0.7;
+                     }
+                     completion:nil];
+}
+
+- (void)GMGridView:(GMGridView *)gridView didEndTransformingCell:(GMGridViewCell *)cell
+{
+    [UIView animateWithDuration:0.5
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                         cell.contentView.backgroundColor = [UIColor redColor];
+                         cell.contentView.layer.shadowOpacity = 0;
+                     }
+                     completion:nil];
+}
+
+- (void)GMGridView:(GMGridView *)gridView didEnterFullSizeForCell:(UIView *)cell
+{
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:DOWNLOAD_IMAGE_SCUUESS object:nil];
+    SAFERELEASE(tableView)
+    [_backTitle release];
+    [contentView release];
+    [_earthBtn release];
+    [_earthLabel release];
+    [super dealloc];
+}
+- (void)viewDidUnload
+{
+    [self setBackTitle:nil];
+    [contentView release];
+    contentView = nil;
+    [self setEarthBtn:nil];
+    [self setEarthLabel:nil];
+    [super viewDidUnload];
+}
+@end

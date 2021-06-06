@@ -1,0 +1,14 @@
+//
+//  BaseNavController.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-7-23.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "LanguageManager.h"
+@interface BaseNavController : UINavigationController<LanguageManagerDelegate>
+
+- (void)updateLanguage:(id)sender;
+@end

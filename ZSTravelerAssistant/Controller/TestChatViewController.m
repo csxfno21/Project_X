@@ -1,0 +1,185 @@
+//
+//  TestChatViewController.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-11-4.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "TestChatViewController.h"
+
+#define CELLHIGHT 0
+
+@interface TestChatViewController ()
+
+@end
+
+@implementation TestChatViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.m_chatTableView.dataSource = self;
+    self.m_chatTableView.delegate = self;
+    self.m_chatTableView.showsVerticalScrollIndicator = NO;
+    self.data = [NSArray arrayWithObjects:@"你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好", nil];
+    self.isSingleChat = YES;
+}
+
+#pragma mark- tableview
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (self.data.count == 0)
+    {
+        self.m_chatTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    else
+    {
+        self.m_chatTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    return self.data.count;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *identifier = @"cell";
+    //测试OthersChatCell类
+//    OthersChatCell *othersChatCell = [tableView dequeueReusableCellWithIdentifier:identifier];
+//    if (othersChatCell == nil)
+//    {
+//        othersChatCell = [[[OthersChatCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+//    }
+//    othersChatCell.selectionStyle = UITableViewCellSelectionStyleNone;
+//    othersChatCell.isSingleChat = self.isSingleChat;
+//    [othersChatCell setHeadImage:@"topbar-bg.png"];
+//    [othersChatCell setChatPeopleText:@"严总"];
+//    [othersChatCell setChatContentText:[self.data objectAtIndex:indexPath.row]];
+//    return othersChatCell;
+    
+    //测试MyselfChatCell类
+    MyselfChatCell *mySelfChatcell = [tableView dequeueReusableCellWithIdentifier:identifier];
+    if (mySelfChatcell == nil)
+    {
+        mySelfChatcell = [[[MyselfChatCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+    }
+    mySelfChatcell.selectionStyle = UITableViewCellSelectionStyleNone;
+    [mySelfChatcell setHeadImage:@"topbar-bg.png"];
+    [mySelfChatcell setChatContentText:[self.data objectAtIndex:indexPath.row]];
+    
+    return mySelfChatcell;
+    
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *str = [self.data objectAtIndex:indexPath.row];
+    return [HTEmotionView sizeWithMessage:str].height;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 40.0f;
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 40)] autorelease];
+    UILabel *tmpLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 320, 40)];
+    tmpLabel.backgroundColor = [UIColor whiteColor];
+    tmpLabel.font = [UIFont systemFontOfSize:12.0f];
+    tmpLabel.textAlignment = NSTextAlignmentCenter;
+    tmpLabel.backgroundColor = [UIColor clearColor];
+    tmpLabel.textColor = [UIColor lightGrayColor];
+    self.showTimeView = tmpLabel;
+    NSDate *senddate = [NSDate date];
+    [self setShowTimeText:senddate];
+    [view addSubview:tmpLabel];
+    view.backgroundColor = [UIColor whiteColor];
+    SAFERELEASE(tmpLabel)
+    return view;
+}
+
+-(void)setShowTimeText:(NSDate *)time
+{
+    //根据字符串获取时间  并与当前时间比较   -----刚刚  1分钟前  5分钟前
+    NSDate *senddate = [NSDate date];
+    NSDateFormatter *dateformatterSys = [[NSDateFormatter alloc] init];
+    [dateformatterSys setDateFormat:@"yyyy-MM-dd HH-mm-ss"];
+    NSString *sysString = [dateformatterSys stringFromDate:senddate];
+    
+    NSDateFormatter *dateformatterTime = [[NSDateFormatter alloc] init];
+    [dateformatterTime setDateFormat:@"yyyy-MM-dd HH-mm-ss"];
+    NSString *timeString = [dateformatterTime stringFromDate:time];
+    
+    //UI显示的时间格式
+    NSDateFormatter *dateformatrerShowTime = [[NSDateFormatter alloc] init];
+    [dateformatrerShowTime setDateFormat:@"HH:mm"];
+    NSString *showTime = [dateformatrerShowTime stringFromDate:time];
+    
+    //截取前14位--HH
+    NSString *subSysString = [sysString substringToIndex:14];
+    NSString *subTimeString = [timeString substringToIndex:14];
+    //截取 14-15字符串  取分钟进行比较
+    NSString *subSysmmString = [sysString substringWithRange:NSMakeRange(14, 2)];
+    NSString *subTimemmString = [timeString substringWithRange:NSMakeRange(14, 2)];
+    int subSysmm = [subSysmmString intValue];
+    int subTimemm = [subTimemmString intValue];
+    
+    if (![subSysString isEqualToString:subTimeString])
+    {
+        return;
+    }
+    else if (subSysmm - subTimemm <= 1)
+    {
+        self.showTimeView.text = @"刚刚";
+    }
+    else if (subSysmm - subTimemm >1 && subSysmm - subTimemm <= 5)
+    {
+        self.showTimeView.text = @"1分钟前";
+    }
+    else if(subSysmm - subTimemm > 5 && subSysmm - subTimemm < 10)
+    {
+        self.showTimeView.text = @"5分钟前";
+    }
+    else
+    {
+        self.showTimeView.text = showTime;
+    }
+    
+}
+
+
+- (IBAction)backAction:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)dealloc {
+    SAFERELEASE(_showTimeView)
+    SAFERELEASE(_data)
+    [_backBtn release];
+    [_m_chatTableView release];
+    [super dealloc];
+}
+- (void)viewDidUnload {
+    [self setBackBtn:nil];
+    [self setM_chatTableView:nil];
+    [super viewDidUnload];
+}
+@end

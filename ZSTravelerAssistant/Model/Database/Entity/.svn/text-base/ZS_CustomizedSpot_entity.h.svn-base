@@ -1,0 +1,52 @@
+//
+//  ZS_Spot_entity.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ZS_CustomizedSpot_entity : NSObject
+{
+    int        ID;
+    NSString  *SpotID;
+    NSString  *SpotName;
+    NSString  *SpotStar;
+    NSString  *SpotContent;
+    NSString  *SpotLength;
+    NSString  *SpotLng;
+    NSString  *SpotLat;
+    NSString  *SpotTickets;
+    NSString  *SpotImgUrl;
+    NSString  *SpotSmallUrl;
+    NSString  *SpotImgName;
+    NSString  *SpotSmallImgName;
+    NSString  *SpotType;
+    NSString  *SpotBuff;
+    NSString  *SpotParentID;
+    NSString  *SpotRemark;
+    double DisToPosition;
+}
+@property (nonatomic,assign) int ID;
+@property (nonatomic,retain) NSString *SpotRemark;
+@property (nonatomic,retain) NSString *SpotID;
+@property (nonatomic,retain) NSString *SpotName;
+@property (nonatomic,retain) NSString *SpotContent;
+@property (nonatomic,retain) NSString *SpotLength;
+@property (nonatomic,retain) NSString *SpotStar;
+@property (nonatomic,retain) NSString *SpotLng;
+@property (nonatomic,retain) NSString *SpotLat;
+@property (nonatomic,retain) NSString *SpotTickets;
+@property (nonatomic,retain) NSString *SpotImgUrl;
+@property (nonatomic,retain) NSString *SpotSmallUrl;
+@property (nonatomic,retain) NSString *SpotImgName;
+@property (nonatomic,retain) NSString *SpotSmallImgName;
+@property (nonatomic,retain) NSString *SpotType;
+@property (nonatomic,retain) NSString *SpotBuff;
+@property (nonatomic,retain) NSString *SpotParentID;
+@property (nonatomic) double DisToPosition;
+
+
+@end

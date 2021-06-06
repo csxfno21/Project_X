@@ -1,0 +1,18 @@
+//
+//  HttpBaseResponse.m
+//  Tourism
+//
+//  Created by csxfno21 on 13-4-3.
+//  Copyright (c) 2013年 logic. All rights reserved.
+//
+
+#import "HttpBaseResponse.h"
+
+@implementation HttpBaseResponse
+@synthesize cc_cmd_code,error_code,UIDelegate;
+-(void)dealloc
+{
+    UIDelegate = nil;
+    [super dealloc];
+}
+@end

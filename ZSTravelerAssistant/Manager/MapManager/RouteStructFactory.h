@@ -1,0 +1,49 @@
+//
+//  RouteStructFactory.h
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-9-24.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+//提供 路线导航前结构 数据
+#import <Foundation/Foundation.h>
+typedef enum 
+{
+    //car
+    ROUTE_STRUCT_ERROR_SUCCESS = 0,
+    ROUTE_STRUCT_ERROR_LOCATIONOUT = 10,             // 当前位置在景区外，不能实地导航
+    ROUTE_STRUCT_ERROR_NOPARKFIND,                  // 没有找到停车场
+    ROUTE_STRUCT_ERROR_NOENTRANCE,                   // 没有找到景区入口
+    ROUTE_STRUCT_ERROR_NOPARKBINDTOENTRANCE,         // 没有找到景区入口所绑定的停车场
+    ROUTE_STRUCT_ERROR_NOPARKFOUNINHISTORY,          // 当前位置在景区内，自家模式，结构里面没有车的纪录，无法生成导航结构
+    ROUTE_STRUCT_ERROR_CANNOTNAVINSCENIC,            // 当前位置在景区内，选择了自家模式 P:在景区内 启动驾车模式导航 不支持
+    
+    //tour car
+    ROUTE_STRUCT_ERROR_NOBINDTOUCAR,                 // 目标点未绑定游览车
+    ROUTE_STRUCT_ERROR_CANNOTNAVINSCENIC_TOURCAR,    // 当前在景区内，目标点也在景区内  不能选自驾
+    
+    ROUTE_STRUCT_ERROR_SYS_TOPOINTOUT,               // 目标点错误,检查到在风景区外
+    ROUTE_STRUCT_ERROR_SYS_NOPARK,                   // 之前的车所在的停车场 找不到了
+    ROUTE_STRUCT_ERROR_SYS_NOCAR,                    // 之前的车 找不到了
+    
+} ROUTE_STRUCT_ERROR_CODE;
+
+@interface RouteStruct : NSObject
+{
+    NSArray *routeSections;
+    ROUTE_STRUCT_ERROR_CODE errorCode;
+}
+@property(nonatomic,retain)NSArray *routeSections;
+@property(nonatomic,assign)ROUTE_STRUCT_ERROR_CODE errorCode;
+@end
+@interface RouteStructFactory : NSObject
+
+
+/**
+ * 输出提供生成路线的结构化数据 RouteSection 数组
+ * @param location 起点坐标    array -> object PoiPoint
+ */
+- (RouteStruct*)outputRouteStruct:(id)location withNavType:(NAV_TYPE)navType withPois:(NSArray*)pois;
+@end
+
+

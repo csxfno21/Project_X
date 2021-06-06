@@ -1,0 +1,103 @@
+//
+//  gatherCalloutView.m
+//  MapViewDemo
+//
+//  Created by 梁谢超 on 13-11-14.
+//
+//
+
+#import "gatherCalloutView.h"
+#define CALL_OUT_ICON_PIX       20
+#define CALL_OUT_ICON_PADDINHG  5
+#define SAFERELEASE(obj)     if(obj){[obj release]; obj = nil;}
+@interface gatherOutDrawer (Private)
+@end
+
+@implementation gatherOutDrawer
+
+- (id)initWithMapView:(AGSMapView*)mapView
+{
+    if(self = [super init])
+    {
+        layer = [AGSGraphicsLayer graphicsLayer];
+        [mapView addMapLayer:layer withName:@"GahterCallOutGraphicLayer"];
+        contentView = mapView;
+    }
+    return self;
+}
+- (UIView*)calloutViewWithPoint:(AGSPoint*)location
+{
+    gatherCalloutView *view = [[[gatherCalloutView alloc] initWithFrame:CGRectMake(0, 0, 150, CALL_OUT_ICON_PIX)] autorelease];
+    view.location = location;
+    view.delegate = self;
+    return view;
+}
+- (void)gatherTeamAtPoint:(AGSPoint *)location
+{
+    if (_gatherdelegate && [_gatherdelegate respondsToSelector:@selector(gatherTeamAtPoint:)])
+    {
+        [_gatherdelegate gatherTeamAtPoint:location];
+    }
+}
+#pragma mark - AGSMapViewCalloutDelegate
+- (BOOL)mapView:(AGSMapView *)mapView shouldShowCalloutForGraphic:(AGSGraphic *)graphic
+{
+    return YES;
+}
+- (void)mapView:(AGSMapView *)mapView didShowCalloutForGraphic:(AGSGraphic *)graphic
+{
+}
+- (void)dealloc
+{
+    _gatherdelegate = nil;
+    [super dealloc];
+}
+@end
+
+
+@implementation gatherCalloutView
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        self.backgroundColor = [UIColor clearColor];
+        
+        _title = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 120, CALL_OUT_ICON_PIX)];
+        _title.textAlignment = UITextAlignmentCenter;
+        _title.textColor = [UIColor whiteColor];
+        _title.backgroundColor = [UIColor clearColor];
+        _title.font = [UIFont boldSystemFontOfSize:12];
+        _title.text = @"这您要集合的位置";
+        [self addSubview:_title];
+
+        _btn = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+        CGRect btn2Frame = CGRectMake(110, 0, 30, CALL_OUT_ICON_PIX);
+        _btn.frame =btn2Frame;
+        [_btn setTitle:@"OK" forState:UIControlStateNormal];
+        [_btn setTitleShadowColor:[UIColor clearColor] forState:UIControlStateNormal];
+        _btn.backgroundColor = [UIColor clearColor];
+        [_btn addTarget:self action:@selector(btnAction:) forControlEvents:UIControlEventTouchUpInside];
+
+
+        [self addSubview:_btn];
+    }
+    return self;
+}
+
+- (void)btnAction:(id)sender
+{
+    if (_delegate && [_delegate respondsToSelector:@selector(gatherTeamAtPoint:)])
+    {
+        [_delegate gatherTeamAtPoint:_location];
+    }
+}
+
+-(void)dealloc
+{
+    SAFERELEASE(_btn)
+    SAFERELEASE(_title)
+    _delegate = nil;
+    [super dealloc];
+}
+@end

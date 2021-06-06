@@ -1,0 +1,15 @@
+//
+//  APPlicationVersionEnum.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-9-2.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+typedef enum
+{
+    VERSION_NEW = 0,            //最新版本
+    VERSION_UPDATE,             //需要更新
+    VERSION_MUST_UPDATE,        //必须更新
+    VERSION_UNKNOW,             //未知版本
+}APPLICATION_VERSION;

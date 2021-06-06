@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse
+END
+MapRouteNavResponse.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/MapRouteNavResponse.h
+END
+MapRouteSectionResponse.h
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/MapRouteSectionResponse.h
+END
+CheckVersionResponse.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/CheckVersionResponse.h
+END
+DwonImgResponse.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/DwonImgResponse.h
+END
+MapRouteNavResponse.m
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/MapRouteNavResponse.m
+END
+MapRouteSectionResponse.m
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/MapRouteSectionResponse.m
+END
+CheckVersionResponse.m
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/CheckVersionResponse.m
+END
+DwonImgResponse.m
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Model/HTTPResponse/DwonImgResponse.m
+END

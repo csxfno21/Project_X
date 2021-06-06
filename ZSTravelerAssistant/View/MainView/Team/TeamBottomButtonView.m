@@ -1,0 +1,45 @@
+//
+//  TeamBottomButtonView.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-10-27.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "TeamBottomButtonView.h"
+
+@implementation TeamBottomButtonView
+@synthesize btnLabel,btnImageView;
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        UIImageView *tmpImageView = [[UIImageView alloc]initWithFrame:CGRectMake(27.5, 2, 25, 25)];
+        self.btnImageView = tmpImageView;
+        [self addSubview:tmpImageView];
+        SAFERELEASE(tmpImageView)
+        
+        UILabel *tmpLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 20, 80, 25)];
+        tmpLabel.backgroundColor = [UIColor clearColor];
+        tmpLabel.numberOfLines = 1;
+        tmpLabel.textAlignment = NSTextAlignmentCenter;
+        tmpLabel.textColor = [UIColor whiteColor];
+        tmpLabel.font = [UIFont systemFontOfSize:14.0f];
+        self.btnLabel = tmpLabel;
+        [self addSubview:tmpLabel];
+        SAFERELEASE(tmpLabel)
+    }
+    return self;
+}
+
+
+-(void)dealloc
+{
+    SAFERELEASE(btnImageView)
+    SAFERELEASE(btnLabel)
+    [super dealloc];
+}
+
+@end

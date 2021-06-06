@@ -1,0 +1,31 @@
+//
+//  TeamFriendTableView.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-22.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "TeamChatCell.h"
+#import "TeamSendMessagePopView.h"
+#import "TeamMatesInfo_entity.h"
+#import "MapManager.h"
+#import "TeamUser.h"
+
+@protocol TeamFriendTableViewDelegate <NSObject>
+
+-(void)teamFriendItemDidSelected:(int)index withType:(TEAM_ACTION_TYPE)type withTeamUser:(TeamUser*)teamUser;
+
+@end
+
+
+@interface TeamFriendTableView : UITableView<UITableViewDataSource,UITableViewDelegate,TeamChatCellDelegate>
+{
+    UIActivityIndicatorView *loadingView;
+    id<TeamFriendTableViewDelegate> teamDelegate;
+    int selectIndex;
+}
+@property (assign, nonatomic) id<TeamFriendTableViewDelegate> teamDelegate;
+@property (nonatomic, retain) NSMutableArray *data;
+@end

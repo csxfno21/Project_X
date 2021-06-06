@@ -1,0 +1,208 @@
+//
+//  InfoMainTableView.m
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-7-24.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "InfoMainTableView.h"
+#import "InfoTableViewCell.h"
+#import "ZS_Infomation_entity.h"
+#define CELL_HEIGHT             150
+
+@implementation InfoMainTableView
+@synthesize infodelegate;
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        self.separatorColor=UIColor.clearColor;
+        self.delegate = self;
+        self.dataSource = self;
+        self.showsHorizontalScrollIndicator = NO;
+        self.showsVerticalScrollIndicator = NO;
+        loadingView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        loadingView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+        [self addSubview:loadingView];
+        if(self.data == nil || self.data.count == 0)
+        [loadingView startAnimating];
+    }
+    return self;
+}
+- (void)setData:(NSArray *)data
+{
+    _data = data;
+    if(_data && _data.count > 0)
+    {
+        [refreshFooterView setFrame:CGRectMake(0, _data.count * CELL_HEIGHT, 320, REFRESH_HEADER_HEIGHT)];
+        [loadingView stopAnimating];
+        [self reloadData];
+    }
+}
+
+#pragma mark - getMore
+- (void)refresh
+{
+    if(self.data.count == 0)
+    {
+        [self stopLoading];
+        return;
+    }
+    lastDataCount = self.data.count;
+    if(self.type == INFOTYPE_SEASON)
+    {
+        ZS_Infomation_entity *entity = (ZS_Infomation_entity*)[self.data lastObject];
+        [[InfoMationManager sharedInstance] requestGetSeasonInfo:self withMoreID:entity.ID];
+    }
+    else
+    {
+        ZS_Infomation_entity *entity = (ZS_Infomation_entity*)[self.data lastObject];
+        [[InfoMationManager sharedInstance] requestGetRecentlyInfo:self withMoreID:entity.ID];
+    }
+}
+#pragma mark - tableView Dalegate
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    int number = self.data.count;
+    if (number == 0)
+    {
+        self.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    else
+    {
+        self.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+    }
+    return number;						  
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    InfoTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(!cell)
+    {
+        cell = [[[InfoTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    }
+    cell.tag = indexPath.row;
+    ZS_Infomation_entity *entity = [self.data objectAtIndex:indexPath.row];
+    if(entity)
+    {
+        cell.m_LbTitle.text = entity.InfoTitle;
+        cell.m_LbContent.text = entity.InfoContent;
+        
+    }
+    UIImage *image = nil;
+    if(self.type == INFOTYPE_SEASON)
+    {
+        image = [[NetFileLoadManager sharedInstanced] loadImageByURL:entity.SmallImageUrl withDelegate:self withID:entity.ID withImgName:entity.SmallImageName withCmdcode:CC_DOWN_IMAGE_SEASONINFO];
+    }
+    else
+    {
+        image = [[NetFileLoadManager sharedInstanced] loadImageByURL:entity.SmallImageUrl withDelegate:self withID:entity.ID withImgName:entity.SmallImageName withCmdcode:CC_DOWN_IMAGE_REC_INFO];
+    }
+     [cell.m_IVImg setImage:image];
+    if(image)
+    {
+       
+        [cell.loadingView stopAnimating];
+    }
+    else
+    {
+        [cell.loadingView startAnimating];
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+    if(infodelegate && [infodelegate respondsToSelector:@selector(itemDidSelected:withType:)])
+    {
+        [infodelegate itemDidSelected:indexPath.row withType:self.type];
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+    return CELL_HEIGHT;
+}
+
+
+#pragma mark - callBack
+- (void)callBackToUI:(HttpBaseResponse *)response
+{
+    switch (response.cc_cmd_code)
+    {
+        case CC_GET_REC_INFO_MORE:
+        case CC_GET_SEASON_INFO_MORE:
+        {
+            if(response.error_code == E_HTTPSUCCEES)
+            {
+                if(lastDataCount == self.data.count)
+                {
+                    UIToast *tost = [[UIToast alloc] init];
+                    [tost show:[Language stringWithName:NODATA]];
+                    SAFERELEASE(tost)
+                }
+            }
+            else
+            {
+                UIToast *tost = [[UIToast alloc] init];
+                [tost show:[Language stringWithName:REQUESTEFAILED]];
+                SAFERELEASE(tost)
+            }
+            [self stopLoading];
+            break;
+        }
+        case CC_DOWN_IMAGE_REC_INFO:
+        case CC_DOWN_IMAGE_SEASONINFO:
+        {
+            if(response.error_code == E_HTTPSUCCEES)
+            {
+                DwonImgResponse *res = (DwonImgResponse*)response;
+                for (int i = 0;i < self.data.count; i++)
+                {
+                    ZS_Infomation_entity *entity = [self.data objectAtIndex:i];
+                    InfoTableViewCell *cell = (InfoTableViewCell*)[self cellForRowAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0]];
+                    if(entity.ID == res.imgID)
+                    {
+                        UIImage *image = [[NetFileLoadManager sharedInstanced] loadImageByURL:entity.SmallImageUrl withDelegate:self withID:entity.ID withImgName:entity.SmallImageName withCmdcode:response.cc_cmd_code];
+                        
+                        if(image)
+                        {
+                            [cell.m_IVImg setImage:image];
+                            [cell.loadingView stopAnimating];
+                        }
+                        else
+                        {
+                            [cell.loadingView startAnimating];
+                        }
+                        return;
+                    }
+                }
+            
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+}
+
+
+- (void)dealloc
+{
+    [[NetFileLoadManager sharedInstanced] cancelRequest:self];
+    [[InfoMationManager sharedInstance] cancelRequest:self];
+    infodelegate = nil;
+    SAFERELEASE(loadingView)
+    [super dealloc];
+}
+
+
+@end

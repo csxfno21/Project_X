@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Manager/VersionManager
+END
+ApplicationVersionManager.m
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Manager/VersionManager/ApplicationVersionManager.m
+END
+TableVersionManager.m
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Manager/VersionManager/TableVersionManager.m
+END
+APPlicationVersionEnum.h
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Manager/VersionManager/APPlicationVersionEnum.h
+END
+ApplicationVersionManager.h
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Manager/VersionManager/ApplicationVersionManager.h
+END
+TableVersionManager.h
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Manager/VersionManager/TableVersionManager.h
+END

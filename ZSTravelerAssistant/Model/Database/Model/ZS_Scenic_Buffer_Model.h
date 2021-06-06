@@ -1,0 +1,25 @@
+//
+//  ZS_Scenic_Buffer_Model.h
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-8-27.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "ZS_Scenic_Buffer_entity.h"
+typedef enum
+{
+    SCENIC_MXL   =  1111,   //明孝陵
+    SCENIC_ZSL,             //中山陵
+    SCENIC_LGS,             //灵谷寺
+    SCENIC_IN    =  1000,   //钟山风景区 景区间
+    SCENIC_OUT   =   999,   //景区外
+    SCENIC_UNKNOW = -1,     //未知位置
+}SCENIC_TYPE;
+@interface ZS_Scenic_Buffer_Model : NSObject
+- (NSArray*)getSpeakContentByType:(SCENIC_TYPE)type;
+- (ZS_Scenic_Buffer_entity*)getBufferByType:(SCENIC_TYPE)type;
+- (BOOL)updateScenicInfo:(NSArray*)data;
+- (BOOL)isScenic:(int)ID;
+@end

@@ -1,0 +1,45 @@
+//
+//  gatherCalloutView.h
+//  MapViewDemo
+//
+//  Created by 梁谢超 on 13-11-14.
+//
+//
+
+#import <Foundation/Foundation.h>
+#import <ArcGIS/ArcGIS.h>
+
+@protocol gatherTeamBtnDelegate <NSObject>
+- (void) gatherTeamAtPoint:(AGSPoint*)location;
+@end
+
+@protocol gatherTeamDelegate <NSObject>
+- (void) gatherTeamAtPoint:(AGSPoint*)location;
+@end
+
+@interface gatherOutDrawer : NSObject<AGSQueryTaskDelegate,AGSMapViewCalloutDelegate,gatherTeamBtnDelegate>
+{
+    AGSGraphicsLayer *layer;
+    AGSMapView *contentView;
+}
+- (UIView*)calloutViewWithPoint:(AGSPoint*)location;
+@property(assign,nonatomic)id<gatherTeamDelegate> gatherdelegate;
+
+@end
+
+@interface gatherTemplate : NSObject<AGSInfoTemplateDelegate>
+{
+
+}
+@end
+
+
+@interface gatherCalloutView : UIView
+{
+    
+}
+@property(nonatomic,retain)UILabel *title;
+@property(nonatomic,retain)UIButton *btn;
+@property(nonatomic,retain)AGSPoint *location;
+@property(assign,nonatomic)id<gatherTeamBtnDelegate> delegate;
+@end

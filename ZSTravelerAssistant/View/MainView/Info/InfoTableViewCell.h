@@ -1,0 +1,30 @@
+//
+//  InfoTableViewCell.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-23.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface InfoTableViewCell : UITableViewCell
+{
+    UIImageView *m_IVBg;
+    UIImageView *m_IVIcon;
+    UILabel *m_LbHot;
+    UIImageView *m_IVArrow;
+    UILabel *m_LbTitle;
+    UIImageView *m_IVImg;
+    UILabel *m_LbContent;
+    UIActivityIndicatorView *loadingView;
+}
+@property(retain,nonatomic)UIActivityIndicatorView *loadingView;
+@property(retain,nonatomic)UIImageView *m_IVBg;
+@property(retain,nonatomic)UIImageView *m_IVIcon;
+@property(retain,nonatomic)UILabel *m_LbHot;
+@property(retain,nonatomic)UIImageView *m_IVArrow;
+@property(retain,nonatomic)UILabel *m_LbTitle;
+@property(retain,nonatomic)UIImageView *m_IVImg;
+@property(retain,nonatomic)UILabel *m_LbContent;
+@end

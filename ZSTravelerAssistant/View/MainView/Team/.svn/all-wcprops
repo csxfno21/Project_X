@@ -1,0 +1,191 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team
+END
+HTEmotionView.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/IOS/!svn/ver/751/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HTEmotionView.h
+END
+TeamInfoCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/IOS/!svn/ver/757/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamInfoCell.h
+END
+OthersChatCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/IOS/!svn/ver/751/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/OthersChatCell.h
+END
+HPGrowingTextView.h
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/IOS/!svn/ver/706/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HPGrowingTextView.h
+END
+HPTextViewInternal.h
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/IOS/!svn/ver/706/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HPTextViewInternal.h
+END
+HTEmotionView.m
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/IOS/!svn/ver/751/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HTEmotionView.m
+END
+TeamInfoCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamInfoCell.m
+END
+HPGrowingTextView.m
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/IOS/!svn/ver/706/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HPGrowingTextView.m
+END
+OthersChatCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/OthersChatCell.m
+END
+HPTextViewInternal.m
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/IOS/!svn/ver/706/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HPTextViewInternal.m
+END
+TeamFriendTableView.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/IOS/!svn/ver/819/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamFriendTableView.h
+END
+TeamChatButton.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamChatButton.h
+END
+ChatDetailBottomView.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/753/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/ChatDetailBottomView.h
+END
+TeamChatCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/IOS/!svn/ver/744/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamChatCell.h
+END
+TeamFriendTableView.m
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamFriendTableView.m
+END
+TeamChatButton.m
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/IOS/!svn/ver/746/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamChatButton.m
+END
+ChatDetailBottomView.m
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/816/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/ChatDetailBottomView.m
+END
+TeamChatCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamChatCell.m
+END
+HTJoinTeamButton.h
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/IOS/!svn/ver/757/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HTJoinTeamButton.h
+END
+MyselfChatCell.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/IOS/!svn/ver/821/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/MyselfChatCell.h
+END
+TeamBottomButtonView.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/699/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamBottomButtonView.h
+END
+HTJoinTeamButton.m
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/IOS/!svn/ver/757/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HTJoinTeamButton.m
+END
+MyselfChatCell.m
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/IOS/!svn/ver/822/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/MyselfChatCell.m
+END
+TeamBottomButtonView.m
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/IOS/!svn/ver/744/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamBottomButtonView.m
+END
+HTRegularExpressionManager.h
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/742/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HTRegularExpressionManager.h
+END
+TeamSendMessagePopView.xib
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamSendMessagePopView.xib
+END
+ChatImageView.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/IOS/!svn/ver/710/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/ChatImageView.h
+END
+HTRegularExpressionManager.m
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/IOS/!svn/ver/742/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/HTRegularExpressionManager.m
+END
+TeamSendMessagePopView.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamSendMessagePopView.h
+END
+ChatImageView.m
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/IOS/!svn/ver/753/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/ChatImageView.m
+END
+TeamSendMessagePopView.m
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MainView/Team/TeamSendMessagePopView.m
+END

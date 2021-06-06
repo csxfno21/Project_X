@@ -1,0 +1,197 @@
+//
+//  TTSEngine.m
+//  MAPDemo
+//
+//  Created by csxfno21 on 13-5-13.
+//  Copyright (c) 2013年 szmap. All rights reserved.
+//
+
+#import "TTSEngine.h"
+
+@implementation TTSEngine
+- (void)dealloc
+{
+    if (hTTS)
+    {
+        jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_OUTPUT_CALLBACK,
+                       NULL);
+        jtTTS_SynthStop((void*)hTTS);
+    }
+    // 退出引擎
+	jtTTS_End((void*)hTTS);
+    
+	// 关闭语音数据输出文件
+	fclose(fpOutPut);
+    
+	// 释放堆空间
+	free(pHeap);
+    [super dealloc];
+}
+
+- (id)init
+{
+
+    if (self = [super init])
+    {
+        jtErrCode			dwError;		// 错误码
+        long				nSize;		// 需要的外部堆空间大小
+
+        // 用户输出音频数据文件指针
+        
+        NSString *path = [[NSBundle mainBundle] pathForResource:@"CNPackage" ofType:@"dat"];
+        const char *strCNFileName = [path UTF8String];
+        
+        NSString *dmPath = [[NSBundle mainBundle] pathForResource:@"EMPackage" ofType:@"dat"];
+        const char *strEMFileName = [dmPath UTF8String];
+        
+        NSString *enPath = [[NSBundle mainBundle] pathForResource:@"ENPackage" ofType:@"dat"];
+        const char *strENFileName = [enPath UTF8String];
+        
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        NSString *cachesDirectory = [paths objectAtIndex:0];
+        NSString *filePath = [cachesDirectory stringByAppendingPathComponent:@"Output.wav"];
+        const char *szOutputFile = [filePath UTF8String];
+        
+        // 获得HEAP大
+        dwError = jtTTS_GetExtBufSize((const signed char*)strCNFileName, (const signed char*)strEMFileName, (const signed char*)strENFileName, (int*)&nSize);
+        if(dwError != jtTTS_ERR_NONE)
+        {
+            return self;
+        }
+        
+        // 分配堆
+        pHeap = (unsigned char *)malloc(nSize);
+        if(pHeap == NULL)
+        {
+            return self;
+        }
+        memset(pHeap, 0, nSize);
+        
+        // 打开语音数据输出文件
+        fpOutPut = fopen(szOutputFile, "wb");
+        if(fpOutPut == NULL)
+        {
+            free(pHeap);
+            return self;
+        }
+        
+        // 初始化引擎
+        dwError = jtTTS_Init((const signed char*)strCNFileName, (const signed char*)strENFileName,NULL, (void**)&hTTS, (void*)pHeap);
+        if (dwError != jtTTS_ERR_NONE)
+        {
+            fclose(fpOutPut);
+            free(pHeap);
+            return self;
+        }
+        
+    }
+    return self;
+}
+
+
+- (void)startSynthsizeInBackground:(NSString*)text
+{
+    [self performSelectorInBackground:@selector(synthesizeText:) withObject:text];
+}
+
+- (void)stopSynthsize
+{
+    [self performSelectorInBackground:@selector(stopInBackground) withObject:nil];
+}
+- (void)stopInBackground
+{
+    if (hTTS)
+    {
+       jtTTS_SynthStop((void*)hTTS);
+    }
+}
+// 段式文本直接输入合成
+- (void)synthesizeText :(NSString*)text
+{
+    if (hTTS)
+    {
+        jtTTS_SynthStop((void*)hTTS);
+//        jtTTS_End((void*)hTTS);
+    }
+    fclose(fpOutPut);//关闭文件操作
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachesDirectory = [paths objectAtIndex:0];
+    NSString *filePath = [cachesDirectory stringByAppendingPathComponent:@"Output.wav"];
+    const char *szOutputFile = [filePath UTF8String];
+    fpOutPut = fopen(szOutputFile, "wb");
+    if (!text || text.length == 0)
+    {
+        NSLog(@"TTS Error, input text can not be null and length must > 0");
+        return;
+    }
+    jtUserData		userData;		// 用户数据
+	// 设置直接文本输入
+	jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_INPUTTXT_MODE,
+                   jtTTS_INPUT_TEXT_DIRECT);
+    jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_CODEPAGE,
+                   (void*)jtTTS_CODEPAGE_UTF8);
+//    jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_ENGINE_SPEEDUP,
+//                   (void*)jtTTS_ENGINE_SPEEDUP_OPEN);
+    
+    jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_WAV_FORMAT,
+                   (void*)jtTTS_FORMAT_PCM_16K16B);
+    jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_OUTPUT_SIZE, (void*)(jtTTS_OUTPUT_DATA_SIZE * 3));
+    WriteWavHeader *writeWavHeader = [[WriteWavHeader alloc] init];
+    [writeWavHeader writeHeader:fpOutPut];
+    [writeWavHeader release];
+	// 设置音频输出回调
+	jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_OUTPUT_CALLBACK,
+                   (void*)(long)outputVoiceProc);
+
+	// 设置回调用户数据
+	userData.pInputFile = NULL;
+	userData.pOutputFile = fpOutPut;
+	userData.hTTS = hTTS;
+    
+	jtTTS_SetParam((void*)hTTS, jtTTS_PARAM_CALLBACK_USERDATA,
+                   (void*)(long)&userData);
+    const char *cc = (char *) [text UTF8String];
+//    const char *stringAsChar = [text cStringUsingEncoding:[NSString defaultCStringEncoding]];     
+    userData.cnText = cc;
+    
+	// 启动合成过程
+	jtTTS_SynthesizeText((void*)hTTS, cc, strlen(cc));
+}
+jtErrCode outputVoiceProc(void* pParameter,
+                                 long iOutputFormat, void* pData, long iSize)
+{
+	jtUserData *userData;
+	if(pParameter == NULL)
+	{
+		return jtTTS_ERR_NONE;
+	}
+	userData = (jtUserData *)pParameter;
+	// 如果iSize为0，则是当前文本的
+	// 所有合成数据均已输出，如果需要停止引擎，
+	// 则可以在这里进行
+	if(iSize <= 0)
+	{
+		// jtTTS_SynthesizeText和jtTTS_Synthesize
+		// 将输入的文本合成完毕后，会自动退出，
+		// 可以不调用jtTTS_SynthStop,而
+		// jtTTS_SynthStart合成完毕后，并不主动退出，
+		// 需调用jtTTS_SynthStop使之退出
+
+		jtTTS_SynthStop((void*)userData->hTTS);
+        WriteWavHeader *writeWavHeader = [[WriteWavHeader alloc] init];
+        [writeWavHeader editHeader:userData->pOutputFile];
+        [writeWavHeader release];
+        [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_MAV_READY object:[NSString stringWithUTF8String:userData->cnText]];
+		return jtTTS_ERR_NONE;
+	}
+    if (userData->pOutputFile)
+    {
+        fwrite(pData, 1, iSize, userData->pOutputFile);
+    }
+    else
+    {
+       return jtTTS_ERR_NONE; 
+    }
+	return jtTTS_ERR_NONE;
+}
+@end

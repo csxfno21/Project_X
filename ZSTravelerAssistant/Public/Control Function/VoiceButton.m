@@ -1,0 +1,85 @@
+//
+//  VoiceButton.m
+//  Tourism
+//
+//  Created by csxfno21 on 13-4-13.
+//  Copyright (c) 2013年 szmap. All rights reserved.
+//
+
+#import "VoiceButton.h"
+@interface VoiceButton(private)
+- (void)initVoice;
+- (void)switchVoiceButton;
+@end
+@implementation VoiceButton
+@synthesize state = _state;
+@synthesize delegate;
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        [self initVoice];
+    }
+    return self;
+}
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if(self = [super initWithCoder:aDecoder])
+    {
+        [self initVoice];
+    }
+    return self;
+}
+- (void)initVoice
+{
+    _state = OPEN;
+    
+    self.backgroundColor = [UIColor clearColor];
+    
+    animView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 74, 44)];
+    animView.backgroundColor = [UIColor clearColor];
+//    [animView setImage:[UIImage imageNamed:@"voice_normal.png"]];
+    animView.animationImages = [NSArray arrayWithObjects:
+                                [UIImage imageNamed:@"voice0.png"],
+                                [UIImage imageNamed:@"voice1.png"],
+                                [UIImage imageNamed:@"voice2.png"],nil];
+    [animView setAnimationDuration:1.0f];
+    [animView setAnimationRepeatCount:0];
+    [animView startAnimating];
+
+    [self addSubview:animView];
+    
+    
+    [self addTarget:self action:@selector(switchVoiceButton) forControlEvents:UIControlEventTouchUpInside];
+}
+- (BOOL)isOpen
+{
+    return _state == OPEN;
+}
+- (void)switchVoiceButton
+{
+    if (_state == CLOSE)
+    {
+        _state = OPEN;
+        [animView startAnimating];
+    }
+    else
+    {
+        _state = CLOSE;
+        [animView stopAnimating];
+        [animView setImage:[UIImage imageNamed:@"voice0.png"]];
+    }
+    
+    if(delegate && [delegate respondsToSelector:@selector(voiceButtonClick:)])
+    {
+        [delegate voiceButtonClick:self.state];
+    }
+}
+- (void)dealloc
+{
+    delegate = nil;
+    [animView release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,38 @@
+//
+//  LoactionRegulation.h
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-9-18.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+/**
+ *
+ * 定位点偏离算法
+ */
+#import <Foundation/Foundation.h>
+#define  MAX_DISTANCE  100                 //最大不超出范围
+#define  MAX_EXCEED     3                  //保存最多偏离点的个数
+
+@interface LoactionPoint : NSObject
+{
+    double longitude;
+    double latitude;
+    double altitude;
+    double oldHorizontalAccuracy;
+}
+@property(nonatomic,assign) double longitude;
+@property(nonatomic,assign) double latitude;
+@property(nonatomic,assign) double altitude;//海拔高度
+@property(nonatomic,assign) double oldHorizontalAccuracy;//精细度
+@end
+
+@interface LoactionRegulation : NSObject
+{
+    LoactionPoint *oldLocation;//上一个旧点
+    NSMutableArray *exceedPoints;
+}
+- (void)clean;
+- (LoactionPoint*) loctaion:(LoactionPoint*)coordinate;
+@end
+

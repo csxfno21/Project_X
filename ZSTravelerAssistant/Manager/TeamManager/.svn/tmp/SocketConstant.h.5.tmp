@@ -1,0 +1,155 @@
+//
+//  Socket.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-10-28.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+// request comd code
+
+
+typedef enum {
+	E_SOCKET_SUCCEES = 0,               //成功
+	E_SOCKETERR_CANCEL,                 //取消请求
+	E_SOCKETERR_TIMEOUT,                //请求超时
+	E_SOCKETERR_AUTH,                   //认证错误
+	E_SOCKETERR_UNABLECREATE,           //无法连接
+	E_SOCKETERR_TOOMUTHREDIRECT,        //重定向
+	E_SOCKETRR_NETCLOSE,                //网络关闭
+	E_SOCKETERR_FAILED= -1              //失败
+}SOCKET_ERR_CODE;
+
+#define  TEAM_HOST                                  @"192.168.0.110"
+//#define  TEAM_HOST                                  @"202.119.107.85"
+#define  TEAM_PORT                                  9086
+
+//发送请求的分隔符
+#define  STRSPLITER     @"%%"
+
+//Socket 登录密码
+#define SOCKTE_LOGIN_PSW        @"123456"
+
+//发送请求的消息头
+#define  REQUEST_HEAD_ANYONE_T0_SERVER      @"0x5E"     //任意人向服务器发送消息
+#define  REQUEST_HEAD_SERVER_TO_ANYONE      @"0X5F"     //服务器向任意人发送消息
+#define  REQUEST_HEAD_VISITER_TO_SERVER     @"0x7E"     //游客向服务器发消息
+#define  REQUEST_HEAD_SERVER_TO_VISITER     @"0x7F"     //服务器向游客发消息
+
+
+//游客发往服务器功能码
+#define FC_USERLOGIN           @"801"
+#define FC_SENDMSGTOSERVER     @"000"       
+
+#define FC_SEND_LOCATIONUPLOAD      @"001"       //位置上传
+#define FC_SEND_USERASKHELP         @"003"       //游客报警
+#define FC_SEND_USERLOGOUT          @"011"       //设备下线
+#define FC_SEND_REQUESTTEAMMEMBER   @"014"       //获取团队内成员
+#define FC_SEND_CRATETEAM           @"015"       //新建团队
+#define FC_SEND_ADDTOTEAM           @"016"       //加入团队
+#define FC_SEND_MODIFYUSERINFO      @"017"       //修改个人信息
+#define FC_SEND_SENDMSGTOTEAM       @"018"       //发送消息给单个队友
+#define FC_SEND_QUITETEAM           @"019"       //退出团队
+#define FC_SEND_DISMISSTEAM         @"020"       //解散团队
+#define FC_SEND_HEARTCLIENT         @"021"       //心跳检测
+#define FC_SEND_SENDMSGTOGROUP      @"022"       //发送消息给团队
+#define FC_SEND_VISITORTEAM         @"025"       //查找数据库中游客团队
+#define FC_SEND_VISITORONLINETEAN   @""       //查找当前在线的团队------安卓中没有的功能码和接口
+#define FC_SEND_UPVISITORPORTRAIT   @""         //上传游客头像------安卓中没有的功能码和接口
+#define FC_SEND_DOWNVISITORPORTRAIT @""         //下载游客头像------安卓中没有的功能码和接口
+
+
+//服务器发往游客
+typedef enum{
+    FC_RECEIVE_RECEIVEALARMHANDLE       = 101,      // 已接警提示（已有工作人员处理）
+    FC_RECEIVE_SENDSTUFFPOSITION        = 103,      // 接警工作人员目前位置
+    FC_RECEIVE_SENDANNOUNCEMENT         = 104,      // 发布景区公告
+    FC_RECEIVE_SENDMSGTOUSER            = 105,      // 指定用户发送
+    FC_RECEIVE_RECEIVEALARMUNHANDLE     = 106,      // 已接警提示（暂未有工作人员处理）
+    FC_RECEIVE_NOTIFYRESUCEED           = 113,      // 通知救援完成
+    FC_RECEIVE_ALARMFAILED              = 111,      // 发送求救请求失败信息
+    FC_RECEIVE_SENDMEMBERINFOS          = 114,      // 发送队伍内成员资料
+    FC_RECEIVE_SENDCREATETEAMRESULT     = 115,      // 发送新建团队结果
+    FC_RECEIVE_SENDADDTOTEAMRESULT      = 116,      // 发送加入团队结果
+    FC_RECEIVE_MODIFIINFORESULT         = 117,      // 修改资料成功后返回结果
+    FC_RECEIVE_SENDTEAMMSG              = 118,      // 发送团队内消息
+    FC_RECEIVE_QUITTEAMRESULT           = 119,      // 发送退出团队结果
+    FC_RECEIVE_DISMISTEAMRESULT         = 120,      // 发送解散团队结果
+    FC_RECEIVE_FINDTEAMLIST             = 121,      // 发送团队列表
+    FC_RECEIVE_SENDTEAMPOSITION         = 122,      // 推送团队团员的位置信息
+    FC_RECEIVE_SENDTEAMINFO             = 123,      // 推送队友状态
+    FC_RECEIVE_FAILDREFRESHMSG          = 126,      // 主动刷新信息失败
+    FC_RECEIVE_FAILDSENDTEAMMSG         = 127,      // 主动发送团队消息失败
+    FC_RECEIVE_HEARTCLIENT              = 130,      // 心跳检测结果
+    FC_RECEIVE_VERIFICATIONFROMSERVER   = 901,      // 服务器登录验证结果
+//    FC_RECEIVE_MSGFROMSERVER            = 902,      // 服务器消息
+} FC_RECEIVE_CODE;
+
+//登录验证返回码
+typedef enum
+{
+    LOGINERRORCODE_OK = 1,  /// 登录成功
+    LOGINERRORCODE_WrongPassword = 2,   /// 密码错误
+    LOGINERRORCODE_IllegalUser = 3,     /// 用户不存在
+    LOGINERRORCODE_NeedIdAndPassword = 4,       /// 缺少设备标识号和密码
+    LOGINERRORCODE_UpToMaxClients=5,        /// 服务器已达到最大连接数
+    LOGINERRORCODE_IsOffline=6,     /// 设备强制下线
+    LOGINERRORCODE_WrongProtocl=7       /// 非法协议
+}LOGINERRORCODE;
+
+
+// 创建团队返回码
+typedef enum
+{
+    CREATETEAM_ERRORCODE_OK = 0,                 //成功
+    CREATETEAM_ERRORCODE_FAILD = 1,              //失败
+    CREATETEAM_ERRORCODE_HAVEREPEATTEAM = 2,     //重复团队
+    
+}CREATETEAM_ERRORCODE;
+
+
+//0 1成功失败返回
+typedef enum
+{
+    REQUEST_ERRORCODE_OK = 0,
+    REQUEST_ERRORCODE_FAIL = 1
+}REQUEST_ERRORCODE;
+
+//0 1 2  分别表示 离线 在线 繁忙
+typedef enum
+{
+    REQUEST_ONLINESTATE_ERRORCODE_OFFLINE = 0,
+    REQUEST_ONLINESTATE_ERRORCODE_NORMAL,
+    REQUEST_ONLINESTATE_ERRORCODE_ABNORMAL
+}REQUEST_ONLINESTATE_ERRORCODE;
+// 请求团队列表
+typedef enum
+{
+    REQUEST_TEAMLIST_TYPE_REFRESH = 0,      //刷新团队列表
+    REQUEST_TEAMLIST_TYPE_MORE = 1,         //请求更多
+}REQUEST_TEAMLIST_TYPE;
+// 返回消息发送状态的类别
+typedef enum
+{
+    REQUEST_SENDMSG_SIMGLE = 0,     //单聊
+    REQUEST_SENDMSG_GROUP = 1,      //群聊
+}REQUEST_SENDMSG_TYPE;
+
+// 发送的 请求类型
+
+typedef enum
+{
+    SC_SINGEL_MESSAGE        = 0x0001,       //发送单人消息
+    SC_GROUP_MESSAGE         = 0x0002,       //群发消息
+    
+}SC_COMMEND_CODE;
+
+
+typedef enum MeesageState
+{
+    MESSAGE_STATE_SENDDING = 0,
+    MESSAGE_STATE_SUCCESS,
+    MESSAGE_STATE_FAILED,
+}MESSAGE_STATE;
+
+
+

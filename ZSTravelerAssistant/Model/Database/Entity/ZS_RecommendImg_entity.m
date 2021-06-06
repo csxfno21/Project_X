@@ -1,0 +1,21 @@
+//
+//  ZS_RecommendImg_entity.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "ZS_RecommendImg_entity.h"
+
+@implementation ZS_RecommendImg_entity
+@synthesize ID,SpotID,ImageName,ImgUrl;
+
+-(void)dealloc
+{
+    SAFERELEASE(SpotID)
+    SAFERELEASE(ImageName)
+    SAFERELEASE(ImgUrl)
+    [super dealloc];
+}
+@end

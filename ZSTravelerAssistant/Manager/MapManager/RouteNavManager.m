@@ -1,0 +1,626 @@
+//
+//  RouteNavManager.m
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-9-11.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "RouteNavManager.h"
+
+static RouteNavManager *manager;
+@implementation RouteNavManager
+
+- (id)init
+{
+    if (self = [super init])
+    {
+     
+    }
+    return self;
+}
++(id)allocWithZone:(NSZone *)zone
+{
+    @synchronized(self)
+    {
+        if (manager == nil)
+        {
+            manager = [super allocWithZone:zone];
+            return manager;
+        }
+    }
+    return nil;
+}
++(RouteNavManager *)sharedInstance
+{
+    @synchronized(self)
+    {
+        if (!manager)
+        {
+            manager = [[RouteNavManager alloc] init];
+        }
+    }
+    return manager;
+}
+
+- (id)retain
+{
+    return self;
+}
+- (id)autorelease
+{
+    return self;
+}
+
+- (void)dealloc
+{
+    SAFERELEASE(manager)
+    [super dealloc];
+}
+
+- (void)requestWalkRoute:(id)UIDelegate withPOIRect:(NSArray *)points
+{
+    if(UIDelegate == nil || !ISARRYCLASS(points) ||points.count == 0)
+    {
+        NSLog(@"requestWalkRoute Error,UIDelegate can not be nil!");
+        return;
+    }
+    NSString *stops = @"{\"features\":[";
+    for (PoiPoint *point in points)
+    {
+        stops = [NSString stringWithFormat:@"%@{\"geometry\":{\"x\":%2f,\"y\":%2f},\"attributes\":{\"Name\":\"%@\"}},",stops,point.longitude,point.latitude,point.name];
+    }
+    if (points.count > 0)
+    {
+        stops = [stops substringToIndex:stops.length - 1];
+    }
+    stops = [NSString stringWithFormat:@"%@%@",stops,@"]}"];
+    HttpRequest *request = [[HttpRequest alloc] init];
+    request.cmdCode = CC_GET_WORK_ROUTE;
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = ACTION_GET_MAP_ROUTE_WALK;
+    NSData *requestData = [[[NSData alloc]initWithBytes:[ACTION_GET_MAP_ROUTE_POST(stops) UTF8String] length:strlen([ACTION_GET_MAP_ROUTE_POST(stops) UTF8String])] autorelease];
+    request.postData = requestData;
+    
+    [[ASIUtil sharedInstance] POSTREQUEST:request withHeader:@"application/x-www-form-urlencoded"];
+    [request release];
+}
+- (void)requestCarRoute:(id)UIDelegate withPOIRect:(NSArray *)points
+{
+    if(UIDelegate == nil || !ISARRYCLASS(points) ||points.count == 0)
+    {
+        NSLog(@"requestCarRoute Error,UIDelegate can not be nil!");
+        return;
+    }
+    NSString *stops = @"{\"features\":[";
+    for (PoiPoint *point in points)
+    {
+        stops = [NSString stringWithFormat:@"%@{\"geometry\":{\"x\":%2f,\"y\":%2f},\"attributes\":{\"Name\":\"%@\"}},",stops,point.longitude,point.latitude,point.name];
+    }
+    if (points.count > 0)
+    {
+        stops = [stops substringToIndex:stops.length - 1];
+    }
+    stops = [NSString stringWithFormat:@"%@%@",stops,@"]}"];
+    HttpRequest *request = [[HttpRequest alloc] init];
+    request.cmdCode = CC_GET_CAR_ROUTE;
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = ACTION_GET_MAP_ROUTE_CAR;
+
+    NSData *requestData = [[[NSData alloc]initWithBytes:[ACTION_GET_MAP_ROUTE_POST(stops) UTF8String] length:strlen([ACTION_GET_MAP_ROUTE_POST(stops) UTF8String])] autorelease];
+    request.postData = requestData;
+    
+    [[ASIUtil sharedInstance] POSTREQUEST:request withHeader:@"application/x-www-form-urlencoded"];
+    [request release];
+}
+
+- (void)requestTourCarRoute:(id)UIDelegate withPOIRect:(NSArray *)points
+{
+    if(UIDelegate == nil || !ISARRYCLASS(points) ||points.count == 0)
+    {
+        NSLog(@"requestTourCarRoute Error,UIDelegate can not be nil!");
+        return;
+    }
+    NSString *stops = @"{\"features\":[";
+    for (PoiPoint *point in points)
+    {
+            stops = [NSString stringWithFormat:@"%@{\"geometry\":{\"x\":%2f,\"y\":%2f},\"attributes\":{\"Name\":\"%@\"}},",stops,point.longitude,point.latitude,point.name];
+    }
+    if (points.count > 0)
+    {
+        stops = [stops substringToIndex:stops.length - 1];
+    }
+    stops = [NSString stringWithFormat:@"%@%@",stops,@"]}"];
+
+    HttpRequest *request = [[HttpRequest alloc] init];
+    request.cmdCode = CC_GET_TOURCAR_ROUTE;
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = ACTION_GET_MAP_ROUTE_TOURCAR;
+    
+    NSData *requestData = [[[NSData alloc]initWithBytes:[ACTION_GET_MAP_ROUTE_POST(stops) UTF8String] length:strlen([ACTION_GET_MAP_ROUTE_POST(stops) UTF8String])] autorelease];
+    request.postData = requestData;
+    
+    [[ASIUtil sharedInstance] POSTREQUEST:request withHeader:@"application/x-www-form-urlencoded"];
+    [request release];
+}
+
+- (void)requestRoute:(id)UIDelegate withSections:(NSArray *)sections withNavType:(NAV_TYPE)type withBarriers:(NSString*)Barriers
+{
+    if(UIDelegate == nil)
+    {
+        NSLog(@"requestGetTraffic Error,UIDelegate can not be nil!");
+        return;
+    }
+    HttpRequest *request = [[HttpRequest alloc] init];
+    if (type == NAV_TYPE_WALK)
+    {
+        request.cmdCode = CC_GET_ROUTE_SECTION_WALK;
+    }
+    else if (type == NAV_TYPE_CAR)
+    {
+        request.cmdCode = CC_GET_ROUTE_SECTION_CAR;
+    }
+    else if (type == NAV_TYPE_TOUR_CAR)
+    {
+        request.cmdCode = CC_GET_ROUTE_SECTION_TOUR_CAR;
+    }
+    
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = [NSString stringWithFormat:@"%@%@",SERVER_ADDRESS,ACTION_GET_ROUTE_SECTION];
+    
+    //JSON 结构
+    NSMutableDictionary *postData = [[NSMutableDictionary alloc] init];
+    SBJsonWriter *writer = [[SBJsonWriter alloc] init];
+
+    NSMutableArray *potArray = [[[NSMutableArray alloc] init] autorelease];
+    for (RouteSection *section in sections)
+    {
+        NSMutableDictionary *dic = [[[NSMutableDictionary alloc] init] autorelease];
+        [dic setObject:INTTOOBJ(section.navType) forKey:@"TravelType"];
+        NSMutableDictionary *startDic = [[[NSMutableDictionary alloc] init] autorelease];
+        [startDic setObject:DOUBLETOOBJ(section.startPoi.longitude) forKey:@"longitude"];
+        [startDic setObject:DOUBLETOOBJ(section.startPoi.latitude) forKey:@"latitude"];
+        [startDic setObject:section.startPoi.name forKey:@"name"];
+        [startDic setObject:INTTOOBJ(section.startPoi.poiID) forKey:@"poiID"];
+        [dic setObject:startDic forKey:@"startPoi"];
+        
+        NSMutableDictionary *endDic = [[[NSMutableDictionary alloc] init] autorelease];
+        [endDic setObject:DOUBLETOOBJ(section.endPoi.longitude) forKey:@"longitude"];
+        [endDic setObject:DOUBLETOOBJ(section.endPoi.latitude) forKey:@"latitude"];
+        [endDic setObject:section.endPoi.name forKey:@"name"];
+        [endDic setObject:INTTOOBJ(section.endPoi.poiID) forKey:@"poiID"];
+        [dic setObject:endDic forKey:@"endPoi"];
+        
+        [potArray addObject:dic];
+    }
+    [postData setObject:potArray forKey:@"RouteRequestInfo"];
+    [postData setObject:Barriers forKey:@"Barriers"];
+    
+    NSString *dataString  = [writer stringWithObject:postData];
+    NSData *requestData = [[[NSData alloc]initWithBytes:[dataString UTF8String] length:strlen([dataString UTF8String])] autorelease];
+    request.postData = requestData;
+    [postData release];
+    [writer release];
+    
+    [[ASIUtil sharedInstance] POSTRequest:request];
+    [request release];
+}
+
+- (void)cancelRequestWithCode:(REQUEST_CMD_CODE)cc_code
+{
+    [super cancelRequestWithCode:cc_code];
+}
+- (void)cancelAllRequest
+{
+    [super cancelAllRequest];
+}
+- (void)cancelRequest:(id)delegate
+{
+    [super cancelRequest:delegate];
+}
+#pragma mark - reciveHttpRespondInfo
+- (void)reciveHttpRespondInfo:(HttpResponse *)response
+{
+    switch (response.cmdCode)
+    {
+        case CC_GET_WORK_ROUTE:
+        case CC_GET_CAR_ROUTE:
+        case CC_GET_TOURCAR_ROUTE:
+        {
+            MapRouteNavResponse *base = [[MapRouteNavResponse alloc] init];
+            base.cc_cmd_code = response.cmdCode;
+            base.UIDelegate = response.UIDelegate;
+            base.error_code = response.errorCode;
+            if(response.errorCode == E_HTTPSUCCEES)
+            {
+                if(response.data)
+                {
+                    NSString *result = [[NSString alloc] initWithData:response.data  encoding:NSUTF8StringEncoding];
+//                    NSLog(@"---- %@",result);
+                    SBJsonParser *jsonP = [[SBJsonParser alloc] init];
+                    NSMutableDictionary *responsedic = [jsonP fragmentWithString:result];
+                    if(ISDICTIONARYCLASS(responsedic))
+                    {
+                        NSArray *NavInfoArry = [responsedic objectForKey:@"directions"];
+                        if(ISARRYCLASS(NavInfoArry))
+                        {
+                            NSDictionary *NavInfoSummary = nil;
+                            NSArray *NavInfoFeature = nil;
+                            for (NSDictionary *entityDic in NavInfoArry)
+                            {
+                                base.routeId = [ReplaceNULL2Empty([entityDic objectForKey:@"routeId"])intValue];
+                                base.routeName = [entityDic objectForKey:@"routeName"];
+                                NavInfoSummary = [entityDic objectForKey:@"summary"];
+                                NavInfoFeature = [entityDic objectForKey:@"features"];
+                            }
+                            if(ISDICTIONARYCLASS(NavInfoSummary))
+                            {
+                                base.totalLength = [ReplaceNULL2Empty([NavInfoSummary objectForKey:@"totalLength"])doubleValue];
+                                NSDictionary *NavInfoEnvelope = [NavInfoSummary objectForKey:@"envelope"];
+                                if (ISDICTIONARYCLASS(NavInfoEnvelope))
+                                {
+                                    base.xmax = [ReplaceNULL2Empty([NavInfoEnvelope objectForKey:@"xmax"])floatValue];
+                                    base.xmin = [ReplaceNULL2Empty([NavInfoEnvelope objectForKey:@"xmin"])floatValue];
+                                    base.ymax = [ReplaceNULL2Empty([NavInfoEnvelope objectForKey:@"ymax"])floatValue];
+                                    base.ymin = [ReplaceNULL2Empty([NavInfoEnvelope objectForKey:@"ymin"])floatValue];
+                                    NSDictionary *NavInfoSpatialReference = [NavInfoEnvelope objectForKey:@"spatialReference"];
+                                    if (ISDICTIONARYCLASS(NavInfoSpatialReference))
+                                    {
+                                        base.wkid = [ReplaceNULL2Empty([NavInfoSpatialReference objectForKey:@"wkid"])intValue];
+                                    }
+                                    else
+                                    {
+                                        base.error_code = E_HTTPERR_FAILED;
+                                    }
+                                }
+                                else
+                                {
+                                    base.error_code = E_HTTPERR_FAILED;
+                                }
+                            }
+                            else
+                            {
+                                base.error_code = E_HTTPERR_FAILED;
+                            }
+                            if (ISARRYCLASS(NavInfoFeature))
+                            {
+                                double tmpLength;
+                                NSString *tmpText = nil;
+                                NSString *tmpCompressedGeometry = nil;
+                                for (NSDictionary *entityDic in NavInfoFeature)
+                                {
+                                    tmpCompressedGeometry = ReplaceNULL2Empty([entityDic objectForKey:@"compressedGeometry"]);
+                                    NSDictionary *NavInfoFeatureAttribute = [entityDic objectForKey:@"attributes"];
+                                    if (ISDICTIONARYCLASS(NavInfoFeatureAttribute))
+                                    {
+                                        tmpText = [NavInfoFeatureAttribute objectForKey:@"text"];
+                                        tmpLength = [ReplaceNULL2Empty([NavInfoFeatureAttribute objectForKey:@"length"])doubleValue];
+                                        MAP_DIRECTION direction = esriDMTUnknown;
+                                        NSString *directionStr = [NavInfoFeatureAttribute objectForKey:@"maneuverType"];
+                                        if ([directionStr isEqualToString:@"esriDMTUnknown"])
+                                        {
+                                            direction = esriDMTUnknown;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTStop"])
+                                        {
+                                            direction = esriDMTStop;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTStraight"])
+                                        {
+                                            direction = esriDMTStraight;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTBearLeft"])
+                                        {
+                                            direction = esriDMTBearLeft;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTBearRight"])
+                                        {
+                                            direction = esriDMTBearRight;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTTurnLeft"])
+                                        {
+                                            direction = esriDMTTurnLeft;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTTurnRight"])
+                                        {
+                                            direction = esriDMTTurnRight;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTSharpLeft"])
+                                        {
+                                            direction = esriDMTSharpLeft;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTSharpRight"])
+                                        {
+                                            direction = esriDMTSharpRight;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTUTurn"])
+                                        {
+                                            direction = esriDMTUTurn;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTRoundabout"])
+                                        {
+                                            direction = esriDMTRoundabout;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTHighwayMerge"])
+                                        {
+                                            direction = esriDMTHighwayMerge;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTHighwayExiT"])
+                                        {
+                                            direction = esriDMTHighwayExiT;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTHighwayChange"])
+                                        {
+                                            direction = esriDMTHighwayChange;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTForkCenter"])
+                                        {
+                                            direction = esriDMTForkCenter;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTForkLeft"])
+                                        {
+                                            direction = esriDMTForkLeft;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTForkRight"])
+                                        {
+                                            direction = esriDMTForkRight;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTDepart"])
+                                        {
+                                            direction = esriDMTDepart;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTTripItem"])
+                                        {
+                                            direction = esriDMTTripItem;
+                                        }
+                                        else if ([directionStr isEqualToString:@"esriDMTEndOfFerry"])
+                                        {
+                                            direction = esriDMTEndOfFerry;
+                                        }
+                                        
+                                        NSArray *pointArray = [PublicUtils ExtractPointsFromCompressedGeometry:tmpCompressedGeometry];
+                                        [base addFeature:tmpText withRoute:pointArray withLength:tmpLength withDirection:direction];
+                                        if ((direction == esriDMTDepart || entityDic == [NavInfoFeature lastObject]) && pointArray.count > 0)
+                                        {
+                                           
+                                            PoiPoint *p = [pointArray lastObject];
+                                            PoiPoint *point = [[[PoiPoint alloc] init] autorelease];
+                                            point.longitude = p.longitude;
+                                            point.latitude = p.latitude;
+                                            if ([tmpText hasPrefix:[Language stringWithName:ROUTE_START]] && [tmpText hasSuffix:[Language stringWithName:ROUTE_GO]])
+                                            {
+                                            
+                                                 tmpText = [tmpText substringFromIndex:[Language stringWithName:ROUTE_START].length];
+                                                   point.name = [tmpText substringToIndex:tmpText.length - [Language stringWithName:ROUTE_GO].length];
+                                                
+                                            }
+                                            else if ([tmpText hasPrefix:[Language stringWithName:ROUTE_LEAVE]])
+                                            {
+                                                
+                                                point.name = [tmpText substringFromIndex:[Language stringWithName:ROUTE_LEAVE].length];
+                                                
+                                            }
+                                            else if ([tmpText hasPrefix:[Language stringWithName:ROUTE_STOP_TO]])
+                                            {
+                                                point.name = [tmpText substringFromIndex:[Language stringWithName:ROUTE_STOP_TO].length];
+                                               
+                                            }
+                                            
+                                            [base.points addObject:point];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        base.error_code = E_HTTPERR_FAILED;
+                                    }
+                                }
+                                
+                            }
+                            else
+                            {
+                                base.error_code = E_HTTPERR_FAILED;
+                            }
+                        }
+                        else
+                        {
+                            base.error_code = E_HTTPERR_FAILED;
+                        }                        
+                    }
+                    else
+                    {
+                        base.error_code = E_HTTPERR_FAILED;
+                    }
+                    
+                    
+                    [result release];
+                    [jsonP release];
+                }
+                else
+                {
+                    base.error_code = E_HTTPERR_FAILED;
+                }
+            }
+            else
+            {
+                base.error_code = E_HTTPERR_FAILED;
+            }
+            if(base.UIDelegate && [base.UIDelegate respondsToSelector:@selector(callBackToUI:)])
+                [base.UIDelegate callBackToUI:base];
+            [base release];
+
+            break;
+        }
+        case CC_GET_ROUTE_SECTION_CAR:
+        case CC_GET_ROUTE_SECTION_TOUR_CAR:
+        case CC_GET_ROUTE_SECTION_WALK:
+        {
+            MapRouteSectionResponse *base = [[MapRouteSectionResponse alloc] init];
+            base.cc_cmd_code = response.cmdCode;
+            base.UIDelegate = response.UIDelegate;
+            base.error_code = response.errorCode;
+            if(base.error_code ==  E_HTTPSUCCEES)
+            {
+                if(response.data)
+                {
+                    NSString *result = [[NSString alloc] initWithData:response.data  encoding:NSUTF8StringEncoding];
+//                    NSLog(@"----- %@",result);
+                    SBJsonParser *jsonP = [[SBJsonParser alloc] init];
+                    NSMutableDictionary *responsedic = [jsonP fragmentWithString:result];
+                    if(ISDICTIONARYCLASS(responsedic))
+                    {
+                        NSArray *directions = [responsedic objectForKey:@"directions"];
+                        if (ISARRYCLASS(directions))
+                        {
+                            for (NSDictionary *features in directions)
+                            {
+                                NSArray *featuresArray = [features objectForKey:@"features"];
+//                                int routeId = [ReplaceNULL2Empty([features objectForKey:@"routeId"]) intValue];
+//                                NSString *routeName = ReplaceNULL2Empty([features objectForKey:@"routeName"]);
+                                NSDictionary *requestData = [features objectForKey:@"requestData"];
+                                
+                                NSDictionary *startPoiDic = [requestData objectForKey:@"startPoi"];
+                                NSDictionary *endPoiDic = [requestData objectForKey:@"endPoi"];
+                                
+                                PoiPoint *startPoi = [PoiPoint pointWithName:ReplaceNULL2Empty([startPoiDic objectForKey:@"name"]) withLongitude:[ReplaceNULL2Empty([startPoiDic objectForKey:@"longitude"]) doubleValue] withLatitude:[ReplaceNULL2Empty([startPoiDic objectForKey:@"latitude"]) doubleValue] withPoiID:[ReplaceNULL2Empty([startPoiDic objectForKey:@"poiID"]) intValue]];
+                                PoiPoint *endPoi = [PoiPoint pointWithName:ReplaceNULL2Empty([endPoiDic objectForKey:@"name"]) withLongitude:[ReplaceNULL2Empty([endPoiDic objectForKey:@"longitude"]) doubleValue] withLatitude:[ReplaceNULL2Empty([endPoiDic objectForKey:@"latitude"]) doubleValue] withPoiID:[ReplaceNULL2Empty([endPoiDic objectForKey:@"poiID"]) intValue]];
+                                
+                                RouteSection *routeSection = [RouteSection sectionWithStartPoi:startPoi withEndPoi:endPoi withNavType:[ReplaceNULL2Empty([requestData objectForKey:@"TravelType"]) intValue]];
+                                
+                                NSMutableArray *sectionAtts = [[[NSMutableArray alloc] init] autorelease];
+                                
+                                for (NSDictionary *attributes in featuresArray)
+                                {
+                                    NSDictionary *att = [attributes objectForKey:@"attributes"];
+                                    NSString *length = ReplaceNULL2Empty([att objectForKey:@"length"]);
+                                    NSString *directionStr = ReplaceNULL2Empty([att objectForKey:@"maneuverType"]);
+                                    NSString *text = ReplaceNULL2Empty([att objectForKey:@"text"]);
+                                    
+                                    NSString *compressedGeometry = ReplaceNULL2Empty([attributes objectForKey:@"compressedGeometry"]);
+                                    MAP_DIRECTION direction = esriDMTUnknown;
+                                    if ([directionStr isEqualToString:@"esriDMTUnknown"])
+                                    {
+                                        direction = esriDMTUnknown;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTStop"])
+                                    {
+                                        direction = esriDMTStop;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTStraight"])
+                                    {
+                                        direction = esriDMTStraight;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTBearLeft"])
+                                    {
+                                        direction = esriDMTBearLeft;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTBearRight"])
+                                    {
+                                        direction = esriDMTBearRight;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTTurnLeft"])
+                                    {
+                                        direction = esriDMTTurnLeft;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTTurnRight"])
+                                    {
+                                        direction = esriDMTTurnRight;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTSharpLeft"])
+                                    {
+                                        direction = esriDMTSharpLeft;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTSharpRight"])
+                                    {
+                                        direction = esriDMTSharpRight;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTUTurn"])
+                                    {
+                                        direction = esriDMTUTurn;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTRoundabout"])
+                                    {
+                                        direction = esriDMTRoundabout;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTHighwayMerge"])
+                                    {
+                                        direction = esriDMTHighwayMerge;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTHighwayExiT"])
+                                    {
+                                        direction = esriDMTHighwayExiT;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTHighwayChange"])
+                                    {
+                                        direction = esriDMTHighwayChange;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTForkCenter"])
+                                    {
+                                        direction = esriDMTForkCenter;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTForkLeft"])
+                                    {
+                                        direction = esriDMTForkLeft;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTForkRight"])
+                                    {
+                                        direction = esriDMTForkRight;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTDepart"])
+                                    {
+                                        direction = esriDMTDepart;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTTripItem"])
+                                    {
+                                        direction = esriDMTTripItem;
+                                    }
+                                    else if ([directionStr isEqualToString:@"esriDMTEndOfFerry"])
+                                    {
+                                        direction = esriDMTEndOfFerry;
+                                    }
+
+                                    NSArray *pointArray = [PublicUtils ExtractPointsFromCompressedGeometry:compressedGeometry];
+                                    SectionAttribute *attribute = [SectionAttribute attributeWithAction:direction withlength:length withText:text withPoints:pointArray];
+                                    
+                                    [sectionAtts addObject:attribute];
+                                }
+                                
+                                Section *section = [Section sectionWithRouteSection:routeSection withAttributes:sectionAtts];
+                                [base.routeFeatures addObject:section];
+                            }
+                        }
+                        else
+                        {
+                            base.error_code = E_HTTPERR_FAILED;
+                        }
+                    }
+                    else
+                    {
+                        base.error_code = E_HTTPERR_FAILED;
+                    }
+                    [result release];
+                    [jsonP release];
+                }
+                else
+                {
+                    base.error_code = E_HTTPERR_FAILED;
+                }
+            }
+            if(base.UIDelegate && [base.UIDelegate respondsToSelector:@selector(callBackToUI:)])
+                [base.UIDelegate callBackToUI:base];
+            [base release];
+            
+            break;
+        }
+        default:
+            break;
+    }
+}
+@end

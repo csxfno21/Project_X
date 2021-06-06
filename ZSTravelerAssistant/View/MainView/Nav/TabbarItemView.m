@@ -1,0 +1,50 @@
+//
+//  TabbarItemView.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-9-24.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "TabbarItemView.h"
+
+@implementation TabbarItemView
+@synthesize imgView,titleLabel,barItem;
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        self.backgroundColor = [UIColor clearColor];
+        UIImageView *tmpImgView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 2, 25, 25)];
+        self.imgView = tmpImgView;
+        [self addSubview:tmpImgView];
+        tmpImgView.backgroundColor = [UIColor clearColor];
+        SAFERELEASE(tmpImgView)
+        
+        UIBarButtonItem *tmpItem = [[UIBarButtonItem alloc]init];
+        self.barItem = tmpItem;
+        SAFERELEASE(tmpItem)
+        
+        UILabel *tmpTitleLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 25, 25, 15)];
+        tmpTitleLabel.backgroundColor = [UIColor clearColor];
+        tmpTitleLabel.font = [UIFont boldSystemFontOfSize:10.0f];
+        tmpTitleLabel.textAlignment = NSTextAlignmentCenter;
+        tmpTitleLabel.textColor = [UIColor whiteColor];
+        self.titleLabel = tmpTitleLabel;
+        [self addSubview:tmpTitleLabel];
+        SAFERELEASE(tmpTitleLabel)
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+    SAFERELEASE(imgView)
+    SAFERELEASE(barItem)
+    SAFERELEASE(titleLabel)
+    [super dealloc];
+}
+
+@end

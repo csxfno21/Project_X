@@ -1,0 +1,28 @@
+//
+// Prefix header for all source files of the 'ZSTravelerAssistant' target in the 'ZSTravelerAssistant' project
+//
+
+#import <Availability.h>
+
+#ifndef __IPHONE_3_0
+#warning "This project uses features only available in iOS SDK 3.0 and later."
+#endif
+
+#ifdef __OBJC__
+    #import <UIKit/UIKit.h>
+    #import <Foundation/Foundation.h>
+    #import "PublicDef.h"
+    #import "StringDef.h"
+    #import "Language.h"
+    #import "ResourcesDef.h"
+    #import "MsgConstant.h"
+    #import "AppDelegate.h"
+    #import "BasePopView.h"
+    #import "SBJSON.h"
+    #import "PublicUtils.h"
+    #import "UIToast.h"
+    #import "NetFileLoadManager.h"
+    #import "DataAccessManager.h"
+    #import "PoiPoint.h"
+    #import "SocketConstant.h"
+#endif

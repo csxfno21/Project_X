@@ -1,0 +1,166 @@
+//
+//  TeamInfoCell.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-10-28.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "TeamInfoCell.h"
+
+@implementation TeamInfoCell
+@synthesize delegate;
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self)
+    {
+        UIImageView *tmpImageView = [[UIImageView alloc]initWithFrame:CGRectMake(10, 10, 80, 80)];
+        self.picImgView = tmpImageView;
+        [self addSubview:tmpImageView];
+        SAFERELEASE(tmpImageView)
+        
+        UILabel *tmpLabelF = [[UILabel alloc]initWithFrame:CGRectMake(120, 5, 180, 30)];
+        tmpLabelF.font = [UIFont boldSystemFontOfSize:17];
+        tmpLabelF.textAlignment = NSTextAlignmentLeft;
+        tmpLabelF.textColor = [UIColor blackColor];
+        self.teamNameLabel = tmpLabelF;
+        [self addSubview:tmpLabelF];
+        SAFERELEASE(tmpLabelF)
+        
+        UILabel *tmpLabelC = [[UILabel alloc]initWithFrame:CGRectMake(140, 38, 150, 20)];
+        tmpLabelC.font = [UIFont systemFontOfSize:14];
+        tmpLabelC.text = [Language stringWithName:TEAM_CREATER];
+        tmpLabelC.textAlignment = NSTextAlignmentLeft;
+        tmpLabelC.textColor = [UIColor darkGrayColor];
+        self.teamCreatorLabel = tmpLabelC;
+        [self addSubview:tmpLabelC];
+        SAFERELEASE(tmpLabelC)
+        
+        UILabel *tmpLabelT = [[UILabel alloc]initWithFrame:CGRectMake(140, 68, 100, 20)];
+        tmpLabelT.font = [UIFont systemFontOfSize:14];
+        tmpLabelT.textAlignment = NSTextAlignmentLeft;
+        tmpLabelT.textColor = [UIColor darkGrayColor];
+        self.teamMatesCountLabel = tmpLabelT;
+        [self addSubview:tmpLabelT];
+        SAFERELEASE(tmpLabelT)
+        
+//        UILabel *tmpTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(140, 78, 150, 15)];
+//        tmpTimeLabel.font = [UIFont systemFontOfSize:14];
+//        tmpTimeLabel.textAlignment = NSTextAlignmentLeft;
+//        tmpTimeLabel.textColor = [UIColor darkGrayColor];
+//        self.teamCreatedTimeLabel = tmpTimeLabel;
+//        [self addSubview:tmpTimeLabel];
+        
+        
+        UIImageView *tmpCreatorImgView = [[UIImageView alloc] initWithFrame:CGRectMake(120, 38, 15, 15)];
+        [tmpCreatorImgView setImage:[UIImage imageNamed:@"team_creator.png"]];
+        self.teamCreatorImgView = tmpCreatorImgView;
+        [self addSubview:tmpCreatorImgView];
+        SAFERELEASE(tmpCreatorImgView)
+        
+        UIImageView *tmpMatesCountImgView = [[UIImageView alloc] initWithFrame:CGRectMake(120, 68, 15, 15)];
+        [tmpMatesCountImgView setImage:[UIImage imageNamed:@"team_count"]];
+        self.teamMatesCountImgView = tmpMatesCountImgView;
+        [self addSubview:tmpMatesCountImgView];
+        SAFERELEASE(tmpMatesCountImgView)
+        
+//        UIImageView *tmpTimeImgView = [[UIImageView alloc] initWithFrame:CGRectMake(120, 78, 15, 15)];
+//        [tmpTimeImgView setImage:[UIImage imageNamed:@"create_time"]];
+//        self.teamCreatedTimeImgView = tmpTimeImgView;
+//        [self addSubview:tmpTimeImgView];
+//        SAFERELEASE(tmpTimeImgView)
+        
+        HTJoinTeamButton *tmpBtn = [[HTJoinTeamButton alloc] initWithFrame:CGRectMake(0, 100, 320, 40)];
+        tmpBtn.joinLabel.text = [Language stringWithName:JOINTEAM];
+        self.joinTeamBtn = tmpBtn;
+        [self addSubview:tmpBtn];
+        SAFERELEASE(tmpBtn)
+        
+        [self.joinTeamBtn addTarget:self action:@selector(jointeamAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return self;
+}
+
+-(void)setTeamName:(NSString *)teamName withTeamCreater:(NSString *)teamCreator withTeamMatesCount:(NSString *)count
+{
+    self.teamNameLabel.text = teamName;
+    self.teamCreatorLabel.text = teamCreator;
+    self.teamMatesCountLabel.text = [NSString stringWithFormat:@"%@%@",count,@"人"];
+}
+
+- (void)setMenuAlpha:(CGFloat)fAlpha
+{
+//    self.backgroundImgView.alpha = fAlpha;
+    self.joinTeamBtn.alpha = fAlpha;
+}
+
+- (void)setBIsShow:(BOOL)bIsShow
+{
+    if(_bIsShow == bIsShow)
+    {
+        if(_bIsShow == NO)
+        {
+            [self setMenuAlpha:0.0f];
+        }
+        else
+        {
+            [self setMenuAlpha:1.0f];
+        }
+        return;
+    }
+    _bIsShow = bIsShow;
+    if(bIsShow)
+    {
+        [self setMenuAlpha:0.0f];
+    }
+    else
+    {
+        [self setMenuAlpha:1.0f];
+    }
+    [UIView animateWithDuration:0.2 animations:^{
+        if(bIsShow)
+        {
+            [self setMenuAlpha:1.0f];
+        }
+        else
+        {
+            [self setMenuAlpha:0.0f];
+        }
+    } completion:^(BOOL finished) {
+    }];
+}
+
+-(void)jointeamAction:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    if (delegate && [delegate respondsToSelector:@selector(teamInfoJoinAction:)])
+    {
+        [delegate teamInfoJoinAction:btn.tag];
+    }
+}
+
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+-(void)dealloc
+{
+    SAFERELEASE(_joinTeamBtn)
+    SAFERELEASE(_picImgView)
+    SAFERELEASE(_teamNameLabel)
+    SAFERELEASE(_teamCreatorLabel)
+    SAFERELEASE(_teamMatesCountLabel)
+    SAFERELEASE(_teamCreatedTimeLabel)
+    SAFERELEASE(_teamCreatorImgView)
+    SAFERELEASE(_teamMatesCountImgView)
+    SAFERELEASE(_teamCreatedTimeImgView)
+    [super dealloc];
+}
+
+@end

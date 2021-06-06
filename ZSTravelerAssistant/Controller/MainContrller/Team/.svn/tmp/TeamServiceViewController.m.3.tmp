@@ -1,0 +1,452 @@
+//
+//  TeamServiceViewController.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-12.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "TeamServiceViewController.h"
+#import "TeamManager.h"
+#import "ChatDetailViewController.h"
+#import "TTSPlayer.h"
+
+#define CELLHEIGHT 100
+#define CELLHIGHTSHOW 140
+#define HEADERHEIGHT 30
+
+
+@interface TeamServiceViewController ()
+
+@end
+
+@implementation TeamServiceViewController
+@synthesize data, filteredListContent, savedSearchTerm, searchWasActive,savedScopeButtonIndex;
+//@synthesize savedScopeButtonIndex;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+//        stretchableImageWithLeftCapWidth
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    selectIndex = -1;
+    
+    self.data = [[NSArray alloc] initWithObjects:@"我的旅游团",@"你的旅游团",@"他的旅游团",@"未知的旅游团", nil];
+    self.filteredListContent = [NSMutableArray array];
+    
+    gesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismisskeyBoard:)];
+    gesture.numberOfTapsRequired = 1;
+    gesture.delegate = self;
+    [self.view addGestureRecognizer:gesture];
+    
+    [self.createTeamBtn setBackgroundImage:[[UIImage imageNamed:@"Route-nav-pop-item-f.png"] stretchableImageWithLeftCapWidth:10 topCapHeight:10] forState:UIControlStateNormal];
+    [self.createTeamBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+
+    [self.joinTeamBtn setBackgroundImage:[[UIImage imageNamed:@"Route-nav-pop-item-f.png"] stretchableImageWithLeftCapWidth:10 topCapHeight:10] forState:UIControlStateNormal];
+    [self.joinTeamBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    
+    
+    
+    [self.view sendSubviewToBack:self.mScrollerView];
+    if (iPhone5)
+    {
+        self.teamServiceImgView.frame = CGRectMake(110, 70, 100, 100);
+    }
+    self.mScrollerView.delegate = self;
+    self.nameTextFiled.tag = 1;
+    self.pwordTextFiled.tag = 2;
+    self.nameTextFiled.delegate = self;
+    self.pwordTextFiled.delegate = self;
+    self.mTeamDisplayTableView.showsVerticalScrollIndicator = NO;
+//    self.animationBtn.backgroundColor = [UIColor grayColor];
+    
+
+    
+    //设置显示
+    firstUIisHidden = NO;
+    self.mTeamDisplayTableView.delegate = self;
+    self.mTeamDisplayTableView.dataSource = self;
+    
+    //searchbar
+    self.searchDisplayController.delegate = self;
+    self.mSearchBar.delegate = self;
+    self.mSearchDisplayController.delegate = self;
+    self.searchWasActive = [self.searchDisplayController isActive];
+    self.savedSearchTerm = [self.searchDisplayController.searchBar text];
+    self.savedScopeButtonIndex = [self.searchDisplayController.searchBar selectedScopeButtonIndex];
+
+
+    [self.mRefresh setBackgroundImage:[[UIImage imageNamed:@"Route-nav-pop-item-f.png"] stretchableImageWithLeftCapWidth:10 topCapHeight:10] forState:UIControlStateNormal];
+    [self.mRefresh setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    
+    [[TeamManager sharedInstanced] registerTeamManagerNotification:self];
+}
+- (IBAction)animationAction:(id)sender
+{
+    //隐藏第一个UI
+    if (!firstUIisHidden)
+    {
+        self.teamServiceImgView.hidden = YES;
+        self.nameTextFiled.hidden = YES;
+        self.pwordTextFiled.hidden = YES;
+        self.createTeamBtn.hidden = YES;
+        self.joinTeamBtn.hidden = YES;
+        
+        self.mSearchBar.hidden = NO;
+        self.mTeamDisplayTableView.hidden = NO;
+        self.mRefresh.hidden = NO;
+        firstUIisHidden = YES;
+        [self.view removeGestureRecognizer:gesture];
+    }
+    //隐藏第二个UI
+    else
+    {
+        [self.view addGestureRecognizer:gesture];
+        self.teamServiceImgView.hidden = NO;
+        self.nameTextFiled.hidden = NO;
+        self.pwordTextFiled.hidden = NO;
+        self.createTeamBtn.hidden = NO;
+        self.joinTeamBtn.hidden = NO;
+        
+        self.mSearchBar.hidden = YES;
+        self.mTeamDisplayTableView.hidden = YES;
+        self.mRefresh.hidden = YES;
+        firstUIisHidden = NO;
+    }
+    
+//    CATransition *animation = [CATransition animation];
+//    animation.duration = 1.0f;
+//    [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
+//    animation.fillMode = kCAFillModeForwards;
+//    animation.type = @"rippleEffect";//suckEffect rippleEffect pageCurl pageUnCurl oglFlip
+//    animation.subtype = kCATransitionFromRight;
+//    [self.view.layer addAnimation:animation forKey:@"animation"];
+    [UIView beginAnimations:@"FlipToSideBySide" context:nil];
+    [UIView setAnimationCurve:1.25];
+    [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+    [UIView setAnimationDuration:1];
+    if (firstUIisHidden == YES)
+    {
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromRight forView:self.view cache:YES];
+    }
+    else
+    {
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self.view cache:YES];
+    }
+    
+    [UIView commitAnimations];
+    
+    
+}
+
+#pragma mark- tableview
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    int number = 4;
+    if (number == 0)
+    {
+        self.mTeamDisplayTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    else
+    {
+        self.mTeamDisplayTableView.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+    }
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+    {
+        return [self.filteredListContent count];
+    }
+    else
+        return [self.data count];
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (selectIndex == indexPath.row)
+    {
+        return CELLHIGHTSHOW;
+    }
+    else
+    {
+        return CELLHEIGHT;
+    }
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellIdentifier = @"Cell";
+    TeamInfoCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    if (!cell)
+    {
+        cell = [[[TeamInfoCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier]autorelease];
+    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.selected = UITableViewCellSelectionStyleBlue;
+    //TODO 给cell赋值
+    if (selectIndex == indexPath.row)
+    {
+        cell.bIsShow = YES;
+    }
+    else
+    {
+        cell.bIsShow = NO;
+    }
+    cell.delegate = self;
+    
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+    {
+        cell.teamNameLabel.text = [self.filteredListContent objectAtIndex:indexPath.row];
+    }
+    else
+    {
+        cell.tag = indexPath.row;
+        cell.teamNameLabel.text = [self.data objectAtIndex:indexPath.row];
+        cell.teamCreatorLabel.text = [NSString stringWithFormat:@"%@%@",[Language stringWithName:TEAM_CREATER],@"包大人"];
+        cell.teamMatesCountLabel.text = @"15 人";
+        cell.teamCreatedTimeLabel.text = @"2013/11/8 11:20";
+        [cell.picImgView setImage:[UIImage imageNamed:@"head-pic-other"]];
+        cell.backgroundColor = [UIColor redColor];
+    }
+
+    return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    TeamInfoCell *cell = (TeamInfoCell*)[tableView cellForRowAtIndexPath:indexPath];
+    if (selectIndex == indexPath.row)
+    {
+        cell.bIsShow = !cell.bIsShow;
+        if (!cell.bIsShow)
+        {
+            selectIndex = -1;
+        }
+    }
+    else
+    {
+        if(selectIndex != -1)
+        {
+            TeamInfoCell *lastOpenCell = (TeamInfoCell *)[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:selectIndex inSection:0]];
+            if(lastOpenCell.bIsShow)
+            {
+                lastOpenCell.bIsShow = NO;
+            }
+        }
+        cell.bIsShow = YES;
+        selectIndex = indexPath.row;
+    }
+    CGRect cellRect = [self.mTeamDisplayTableView rectForRowAtIndexPath:indexPath];
+    if (cellRect.origin.y - self.mTeamDisplayTableView.contentOffset.y + CELLHIGHTSHOW > self.mTeamDisplayTableView.frame.size.height)
+    {
+    float needScrolOffset = CELLHIGHTSHOW - (self.mTeamDisplayTableView.frame.size.height - cellRect.origin.y + self.mTeamDisplayTableView.contentOffset.y);
+    [self.mTeamDisplayTableView setContentOffset:CGPointMake(0, needScrolOffset + self.mTeamDisplayTableView.contentOffset.y) animated:YES];
+    }
+
+    [tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationNone];
+//    [self setLoadingViewFram];
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return HEADERHEIGHT;
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 30)] autorelease];
+    view.backgroundColor = [UIColor whiteColor];
+    UILabel *titleLabel = [[UILabel alloc]initWithFrame:CGRectMake(20, 0, 95, 30)];
+    titleLabel.font = [UIFont boldSystemFontOfSize:15.0f];
+    titleLabel.text = @"当前在线团队";
+    [view addSubview:titleLabel];
+    [titleLabel release];
+    
+    UILabel *countLabel = [[UILabel alloc]initWithFrame:CGRectMake(115, 0, 100, 30)];
+    countLabel.font = [UIFont boldSystemFontOfSize:17.0f];
+    countLabel.text = [NSString stringWithFormat:@": %d",self.data.count];
+    [view addSubview:countLabel];
+    [countLabel release];
+    
+    return view;
+}
+
+
+- (void)dismisskeyBoard:(id)sender
+{
+    [self.nameTextFiled resignFirstResponder];
+    [self.pwordTextFiled resignFirstResponder];
+}
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
+    UIView *touchView = touch.view;
+    if([touchView isKindOfClass:[UIButton class]] || [touchView.superview isKindOfClass:[UITextField class]])
+    {
+        return NO;
+    }
+    return YES;
+}
+- (IBAction)backAction:(id)sender
+{
+    [self dismisskeyBoard:sender];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+- (IBAction)createAction:(id)sender
+{
+    [[TeamManager sharedInstanced] teamrequestCreateTeam:self.nameTextFiled.text withPsw:self.pwordTextFiled.text];
+
+}
+
+- (IBAction)joinAction:(id)sender
+{
+    TeamFriendShowViewController *friendShowViewController = [[TeamFriendShowViewController alloc]initWithNibName:@"TeamFriendShowViewController" bundle:nil];
+    [self.navigationController pushViewController:friendShowViewController animated:YES];
+    SAFERELEASE(friendShowViewController)
+}
+#pragma mark- mScrollerView delegate
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+
+    
+}
+#pragma mark- textfield delegate
+-(void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    CGPoint newPoint = CGPointMake(0, 40);
+    [self.mScrollerView setContentOffset:newPoint animated:YES];
+}
+-(void)textFieldDidEndEditing:(UITextField *)textField
+{
+    CGPoint newPoint = CGPointMake(0, 0);
+    [self.mScrollerView setContentOffset:newPoint animated:YES];
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    if(textField == self.nameTextFiled)
+    {
+        [self.pwordTextFiled becomeFirstResponder];
+    }
+    else if(textField == self.pwordTextFiled)
+    {
+        [self dismisskeyBoard:nil];
+    }
+    return NO;
+}
+
+#pragma mark- Content Filtering
+-(void)filterContentForSearchText:(NSString *)searchText scope:(NSString*)scope
+{
+    [self.filteredListContent removeAllObjects];
+    for (NSString *str in data)
+    {
+        if ([scope hasSuffix:str] ||  [str isEqualToString:searchText])
+        {
+            NSComparisonResult result = [str compare:searchText options:(NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch) range:NSMakeRange(0, [searchText length])];
+            if (result == NSOrderedSame)
+            {
+                [self.filteredListContent addObject:str];
+            }
+        }
+    }
+}
+
+#pragma mark- search bar and search display delegate
+-(BOOL)searchDisplayController:(UISearchDisplayController *)controller shouldReloadTableForSearchString:(NSString *)searchString
+{
+    [self filterContentForSearchText:searchString scope:
+    [[self.searchDisplayController.searchBar scopeButtonTitles] objectAtIndex:[self.searchDisplayController.searchBar selectedScopeButtonIndex]]];
+    return YES;
+}
+-(BOOL)searchDisplayController:(UISearchDisplayController *)controller shouldReloadTableForSearchScope:(NSInteger)searchOption
+{
+    [self filterContentForSearchText:[self.searchDisplayController.searchBar text] scope:
+     [[self.searchDisplayController.searchBar scopeButtonTitles] objectAtIndex:searchOption]];
+    return YES;
+}
+#pragma mark- teamInfoCell delegate  加入团队  密码
+-(void)teamInfoJoinAction:(int)index
+{
+    
+}
+// 接收登录验证结果
+- (void)receiveLoginResult:(NSString*)result
+{
+    if ([result intValue] != LOGINERRORCODE_OK)     // 登录socket不成功
+    {
+        NSString* str = [NSString stringWithFormat:@"Login result is %@",result];
+        NSLog(@"%@",str);
+    }
+}
+// 接收新建团队结果
+- (void)receivedCreateTeamResult:(NSString*)isSuccess
+{
+    if ([isSuccess intValue] == CREATETEAM_ERRORCODE_FAILD)
+    {
+        NSString* result = @"创建团队失败";
+        [[TTSPlayer shareInstance] play:result playMode:TTS_DEFAULT];
+    }
+    else
+    {
+        if ([isSuccess intValue] == CREATETEAM_ERRORCODE_HAVEREPEATTEAM)
+        {
+            NSString* result = @"有重复团队";
+            [[TTSPlayer shareInstance] play:result playMode:TTS_DEFAULT];
+        }
+    }
+}
+// 接收加入团队结果
+-(void)receivedJoinToTeamResult:(NSString *)isSuccess
+{
+    NSString *str = [NSString stringWithFormat:@"add to team result is %@",isSuccess];
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)dealloc
+{
+    SAFERELEASE(gesture)
+    [_topTitleImgView release];
+    [_topTitleLabel release];
+    [_backBtn release];
+    [_backLabel release];
+    [_teamServiceImgView release];
+    [_nameTextFiled release];
+    [_pwordTextFiled release];
+    [_createTeamBtn release];
+    [_joinTeamBtn release];
+    [_mScrollerView release];
+    [_mTeamDisplayTableView release];
+    [_mRefresh release];
+    [_animationBtn release];
+    [_mSearchBar release];
+    [super dealloc];
+}
+- (void)viewDidUnload
+{
+    [self setTopTitleImgView:nil];
+    [self setTopTitleLabel:nil];
+    [self setBackBtn:nil];
+    [self setBackLabel:nil];
+    [self setTeamServiceImgView:nil];
+    [self setNameTextFiled:nil];
+    [self setPwordTextFiled:nil];
+    [self setCreateTeamBtn:nil];
+    [self setJoinTeamBtn:nil];
+    [self setMScrollerView:nil];
+    [self setMTeamDisplayTableView:nil];
+    [self setMRefresh:nil];
+    [self setMSearchBar:nil];
+    [super viewDidUnload];
+}
+@end

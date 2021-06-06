@@ -1,0 +1,248 @@
+//
+//  NavigationView.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-10-10.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "NavigationView.h"
+@implementation NavigationLabelView
+@synthesize targetLabel,nameLabel,disLabel,disUnitLabel;
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        self.backgroundColor = [UIColor clearColor];
+        
+        UILabel *tmpTargetLabel = [[UILabel alloc]init];
+        tmpTargetLabel.textColor = [UIColor whiteColor];
+        tmpTargetLabel.font = [UIFont boldSystemFontOfSize:20.0f];
+        tmpTargetLabel.backgroundColor = [UIColor darkGrayColor];
+        tmpTargetLabel.textAlignment = NSTextAlignmentCenter;
+        self.targetLabel = tmpTargetLabel;
+        [self addSubview:tmpTargetLabel];
+        SAFERELEASE(tmpTargetLabel)
+        
+        UILabel *tmpNameLabel = [[UILabel alloc]init];
+        tmpNameLabel.textColor = [UIColor whiteColor];
+        tmpNameLabel.font = [UIFont boldSystemFontOfSize:18.0f];
+        tmpNameLabel.textAlignment = NSTextAlignmentCenter;
+        tmpNameLabel.backgroundColor = [UIColor darkGrayColor];
+        self.nameLabel = tmpNameLabel;
+        [self addSubview:tmpNameLabel];
+        SAFERELEASE(tmpNameLabel)
+        
+        UILabel *tmpDisLabel = [[UILabel alloc]init];
+        tmpDisLabel.textColor = [UIColor whiteColor];
+        tmpDisLabel.font = [UIFont boldSystemFontOfSize:20.0f];
+        tmpDisLabel.textAlignment = NSTextAlignmentCenter;
+        tmpDisLabel.backgroundColor = [UIColor darkGrayColor];
+        self.disLabel = tmpDisLabel;
+        [self addSubview:tmpDisLabel];
+        SAFERELEASE(tmpDisLabel)
+        
+        UILabel *tmpDisUnitLabel = [[UILabel alloc]init];
+        tmpDisUnitLabel.textColor = [UIColor whiteColor];
+        tmpDisUnitLabel.font = [UIFont boldSystemFontOfSize:20.0f];
+        tmpDisUnitLabel.textAlignment = NSTextAlignmentCenter;
+        tmpDisUnitLabel.backgroundColor = [UIColor darkGrayColor];
+        self.disUnitLabel = tmpDisUnitLabel;
+        [self addSubview:tmpDisUnitLabel];
+        SAFERELEASE(tmpDisUnitLabel)
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+    SAFERELEASE(targetLabel)
+    SAFERELEASE(nameLabel)
+    SAFERELEASE(disLabel)
+    SAFERELEASE(disUnitLabel)
+    [super dealloc];
+}
+
+@end
+
+
+@implementation NavigationView
+@synthesize naviLabelOne,naviLabelTwo;
+@synthesize navMenuBar;
+@synthesize delegate;
++(NavigationView *)instanceNavigationView
+{
+    NSArray* nibView =  [[NSBundle mainBundle] loadNibNamed:@"NavigationView" owner:nil options:nil];
+    return [[nibView objectAtIndex:0] retain];
+}
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super initWithCoder:aDecoder])
+    {
+        NavigationLabelView *tmpNaviLabelOne = [[NavigationLabelView alloc]init];
+        tmpNaviLabelOne.nameLabel.frame = CGRectMake(89, 0, 185, 44);
+        self.naviLabelOne = tmpNaviLabelOne;
+        self.naviLabelOne.tag = 1100;
+        [self addSubview:tmpNaviLabelOne];
+        SAFERELEASE(tmpNaviLabelOne)
+        
+        NavigationLabelView *tmpNaviLabelTwo = [[NavigationLabelView alloc]init];
+        if (iPhone5)
+        {
+            tmpNaviLabelTwo.nameLabel.frame = CGRectMake(46, 504, 228, 44);
+        }
+        else
+        {
+            tmpNaviLabelTwo.nameLabel.frame = CGRectMake(46, 416, 228, 44);
+        }
+        tmpNaviLabelTwo.nameLabel.text = [NSString stringWithFormat:@"%@:%@%@",[Language stringWithName:JDQMU],@"0",[Language stringWithName:METER]];
+        self.naviLabelTwo = tmpNaviLabelTwo;
+        self.naviLabelTwo.nameLabel.font = [UIFont systemFontOfSize:17.0f];
+        self.naviLabelTwo.tag = 1101;
+        [self addSubview:tmpNaviLabelTwo];
+        SAFERELEASE(tmpNaviLabelTwo)
+
+        self.directionImgView.backgroundColor = [UIColor clearColor];
+//        self.directionImgView.tag = 1102;
+        self.disValueLabel.textColor = [UIColor whiteColor];
+        self.disValueLabel.backgroundColor = [UIColor grayColor];
+        self.disValueLabel.font = [UIFont boldSystemFontOfSize:20.0f];
+//        self.disValueLabel.tag = 1103;
+        
+        UIImage *image = [UIImage imageNamed:@"guide_more_.png"];
+        UIImage *selectedImage = [UIImage imageNamed:@"guide_more_pressed.png"];
+        UIImage *toggledImage = [UIImage imageNamed:@"guide_more_down.png"];
+        UIImage *toggledSelectedImage = [UIImage imageNamed:@"guide_more_down_pressed.png"];
+        
+        CGPoint center;
+        if(!iPhone5)
+        {
+            center = CGPointMake(300, 504 - 65);
+        }
+        else
+        {
+            center = CGPointMake(300, 504);
+        }
+
+        CGRect buttonFrame = CGRectMake(0, 0, 32.0f, 32.0f);
+        UIButton *b1 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [b1 setTag:10000];
+        [b1 setFrame:buttonFrame];
+        [b1 setImage:[UIImage imageNamed:@"navSpot2.png"] forState:UIControlStateNormal];
+        [b1 setImage:[UIImage imageNamed:@"navSpot2_pressed.png"] forState:UIControlStateHighlighted];
+        [b1 addTarget:self action:@selector(toolsAction:) forControlEvents:UIControlEventTouchUpInside];
+        UIButton *b2 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [b2 setTag:10001];
+        [b2 setImage:[UIImage imageNamed:@"navCommon2.png"] forState:UIControlStateNormal];
+        [b2 setImage:[UIImage imageNamed:@"navCommon2_pressed.png"] forState:UIControlStateHighlighted];
+        [b2 setFrame:buttonFrame];
+        [b2 addTarget:self action:@selector(toolsAction:) forControlEvents:UIControlEventTouchUpInside];
+        UIButton *b3 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [b3 setTag:10002];
+        [b3 setImage:[UIImage imageNamed:@"navAround2.png"] forState:UIControlStateNormal];
+        [b3 setImage:[UIImage imageNamed:@"navAround2_pressed.png"] forState:UIControlStateHighlighted];
+        [b3 setFrame:buttonFrame];
+        [b3 addTarget:self action:@selector(toolsAction:) forControlEvents:UIControlEventTouchUpInside];
+        NSArray *buttons = [NSArray arrayWithObjects:b1, b2, b3, nil];
+        navMenuBar = [[RNExpandingButtonBar alloc] initWithImage:image selectedImage:selectedImage toggledImage:toggledImage toggledSelectedImage:toggledSelectedImage buttons:buttons center:center];
+        [self addSubview:navMenuBar];
+    }
+    return self;
+}
+- (void)hideButtonsAnimated
+{
+    if(navMenuBar)[navMenuBar hideButtonsAnimated:NO];
+}
+- (void)changeTarget:(NSString *)currentTarget
+{
+    if (!currentTarget)
+    {
+        self.naviLabelOne.nameLabel.text = @"currentTarget is null";
+        return;
+    }
+    self.naviLabelOne.nameLabel.text = currentTarget;
+}
+-(void)changeDis:(double)targetDis TurnDis:(double)turnDis
+{
+    self.naviLabelTwo.nameLabel.text = [NSString stringWithFormat:@"%@:%d%@",[Language stringWithName:JDQMU],(int)targetDis,[Language stringWithName:METER]];
+    self.disValueLabel.text = [NSString stringWithFormat:@"%d%@",(int)turnDis,[Language stringWithName:METER]];
+}
+-(void)changeDirections:(MAP_DIRECTION)orientation
+{
+    //根据传进来的枚举类型，加载对应的方向图片
+    switch (orientation)
+    {
+        case esriDMTStop:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_0.png"]];
+            break;
+        case esriDMTBearLeft:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_3.png"]];
+            break;
+        case esriDMTBearRight:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_4.png"]];
+            break;
+        case esriDMTDepart:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_0.png"]];
+            break;
+        case esriDMTForkCenter:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_0.png"]];
+            break;
+        case esriDMTForkLeft:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_3.png"]];
+            break;
+        case esriDMTForkRight:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_4.png"]];
+            break;
+        case esriDMTSharpLeft:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_5.png"]];
+            break;
+        case esriDMTSharpRight:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_6.png"]];
+            break;
+        case esriDMTStraight:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_0.png"]];
+            break;
+        case esriDMTTurnLeft:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_1.png"]];
+            break;
+        case esriDMTTurnRight:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_2.png"]];
+            break;
+        case esriDMTUnknown:
+            [self.directionImgView setImage:[UIImage imageNamed:@""]];
+            break;
+        case esriDMTUTurn:
+            [self.directionImgView setImage:[UIImage imageNamed:@"default_navi_action_7.png"]];
+            break;
+        default:
+            [self.directionImgView setImage:[UIImage imageNamed:@""]];
+            break;
+    }
+}
+-(void)toolsAction:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    if (delegate && [delegate respondsToSelector:@selector(navMenuAction:)])
+    {
+        [delegate navMenuAction:btn.tag];
+    }
+}
+
+
+- (void)dealloc
+{
+    SAFERELEASE(naviLabelOne)
+    SAFERELEASE(naviLabelTwo)
+    [_directionImgView release];
+    [_disValueLabel release];
+    [sosBtn release];
+    [closeBtn release];
+    [moreBtn release];
+    [partLine1 release];
+    [partLine2 release];
+    [partLine3 release];
+    [partLine4 release];
+    [super dealloc];
+}
+@end

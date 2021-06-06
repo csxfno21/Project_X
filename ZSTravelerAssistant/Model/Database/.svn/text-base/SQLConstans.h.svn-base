@@ -1,0 +1,100 @@
+//
+//  SQLConstans.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#ifndef ZSTravelerAssistant_SQLConstans_h
+#define ZSTravelerAssistant_SQLConstans_h
+
+#define  FILES_DB                       @"ZSTraveler.sqlite"
+
+#define  SELECT_SINGLE_Around           @"SELECT * FROM T_Around WHERE ID = %@;"
+#define  SELECT_ALL_Around              @"SELECT * FROM T_Around"
+#define  SELECT_SINGLE_CommonNav        @"SELECT * FROM T_Poi WHERE NavID = %d;"
+#define  SELECT_POITypeByID             @"SELECT NavType FROM T_Poi WHERE NavID = %d;"
+#define  SELECT_ALL_CommonNav           @"SELECT * FROM T_Poi WHERE %@;"
+#define  SECECT_POI_RELATION_BY_PARIENTID @"SELECT * FROM T_PoiRelation WHERE ParentID = %d;"
+#define  SECECT_POI_RELATION_BY_POIID   @"SELECT * FROM T_PoiRelation WHERE PoiID = %d;"
+#define  SELECT_POI_RALATIONBUFFER_BY_ID  @"SELECT POIBuffer FROM T_PoiRelation WHERE PoiID = %d;"
+#define  SELECT_POIREALATIONCOUNT_BY_ID @"SELECT COUNT(*) cnt FROM T_PoiRelation WHERE PoiID = %d;"
+
+#define  SELECT_SINGLE_Infomation       @"SELECT * FROM T_Information WHERE ID = %@;"
+#define  SELECT_ALL_Infomation          @"SELECT * FROM T_Information WHERE InfoType = %d;"
+#define  SELECT_SINGLE_Recommend        @"SELECT * FROM T_Recommending WHERE ID = %@;"
+#define  SELECT_ALL_Recommend           @"SELECT * FROM T_RecommendImg"
+#define  SELECT_SINGLE_Spot             @"SELECT * FROM T_Spot WHERE ID = %@;"
+#define  SELECT_Spot_Name               @"SELECT * FROM T_Spot WHERE SpotName = '%@';"
+#define  SELECT_Spot_ID                 @"SELECT * FROM T_Spot WHERE SpotID = '%@';"
+#define  SELECT_SpotBufferByID          @"SELECT SpotBuff FROM T_Spot WHERE SpotID = '%@';"
+#define  SELECT_ALL_Spot                @"SELECT * FROM T_Spot"
+#define  SELECT_SINGLE_SpotRoute        @"SELECT * FROM T_SpotRoute WHERE ID = %@;"
+#define  SELECT_ALL_SpotRoute           @"SELECT * FROM T_SpotRoute WHERE RouteType = %d;"
+#define  SELECT_SINGLE_Traffic          @"SELECT * FROM T_Traffic WHERE ID = %@;"
+#define  SELECT_ALL_Traffic             @"SELECT * FROM T_Traffic WHERE TrafficType = %d"
+#define  SELECT_ALL_Version             @"SELECT * FROM T_TableVersion"
+#define  SELECT_ALL_SpotType            @"SELECT * FROM T_Spot WHERE SpotType = %d;"
+#define  SELECT_Spots_Detail            @"SELECT * FROM T_Spot WHERE %@;"
+#define  SELECT_SCENIC_BY_TYPE          @"SELECT ID,SpotID,ViewName,BufferIn ,BufferOut FROM T_Scenic WHERE SpotID = %d;"
+#define  SELECT_SECNIC_COUNT_BY_ID      @"SELECT COUNT(*) cnt FROM T_Scenic WHERE SpotID = %d;"
+#define  SELECT_SpeakContent_BY_TYPE    @"SELECT SpeakContentIn ,SpeakContentOut FROM T_Scenic WHERE SpotID = %d;"
+
+#define  UPDATE_TABLE_VERSION           @"UPDATE T_TableVersion SET TableVersion = %@ WHERE TableName = '%@';"
+
+#define  DELETE_Recommend               @"DELETE FROM T_RecommendImg;"
+#define  INSERT_Recommend               @"INSERT or REPLACE INTO T_RecommendImg(SpotID,ImageName,ImgUrl) VALUES(?,?,?);"
+
+#define  DELETE_Information             @"DELETE FROM T_Information;"
+#define  INSERT_Information             @"INSERT or REPLACE INTO T_Information(InfoTitle,InfoContent,InfoImgUrl,InfoImgName,InfoType,SmallImageUrl,SmallImageName) VALUES(?,?,?,?,?,?,?);"
+
+#define  DELETE_Traffic                 @"DELETE FROM T_Traffic;"
+#define  INSERT_Traffic                 @"INSERT or REPLACE INTO T_Traffic(TrafficName,TrafficStartTime,TrafficEndTime,TrafficDetail,TrafficRemark,TrafficTicket,TrafficType) VALUES(?,?,?,?,?,?,?);"
+
+#define  DELETE_SpotRoute               @"DELETE FROM T_SpotRoute;"
+#define  INSERT_SpotRoute               @"INSERT OR REPLACE INTO T_SpotRoute(RouteLength,RouteTime,RouteTicket,RouteTitle,RouteContent,RouteType,RouteSmallImgUrl,RouteSmallImgName,RouteList,RouteImageUrl,RouteImageName) VALUES(?,?,?,?,?,?,?,?,?,?,?);"
+
+#define  DELETE_Spot                    @"DELETE FROM T_Spot;"
+#define  INSERT_Spot                    @"INSERT OR REPLACE INTO T_Spot(SpotID,SpotName,SpotStar,SpotLng,SpotLat,SpotTickets,SpotLength,SpotContent,SpotImgUrl,SpotSmallUrl,SpotImgName,SpotSmallImgName,SpotType,SpotBuff,SpotParentID) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+
+#define  DELETE_Poi                     @"DELETE FROM T_Poi;"
+#define  INSERT_Poi                     @"INSERT OR REPLACE INTO T_Poi(NavType,NavTitle,NavLng,NavLat,NavContent,NavInSpotID,NavID,NavPosition,NavRemark,POITourCar,POIPark) VALUES(?,?,?,?,?,?,?,?,?,?,?);"
+#define  DELETE_PoiRelation             @"DELETE FROM T_PoiRelation;"
+#define  INSERT_PoiRelation             @"INSERT OR REPLACE INTO T_PoiRelation(PoiID,ParentID,POITitle,POIType,POILng,POILat,POIBuffer) VALUES(?,?,?,?,?,?,?);"
+
+#define  DELETE_Speak                   @"DELETE FROM T_SpeakContent;"
+#define  INSERT_Speak                   @"INSERT OR REPLACE INTO T_SpeakContent(SpotID,SpotName,SpeakSpotContent,SpotBuffer,SpotParentID) VALUES(?,?,?,?,?);"
+#define  SELECT_ALL_SPOT_SPEAK          @"SELECT * FROM T_SpeakContent;"
+#define  SELECT_MXL_SPOT_SPEAK          @"SELECT * FROM T_SpeakContent where SpotParentID = 1111;"
+#define  SELECT_ZSL_SPOT_SPEAK          @"SELECT * FROM T_SpeakContent where SpotParentID = 1112;"
+#define  SELECT_LGS_SPOT_SPEAK          @"SELECT * FROM T_SpeakContent where SpotParentID = 1113;"
+#define  SELECT_ZB_SPOT_SPEAK           @"SELECT * FROM T_SpeakContent where SpotParentID = 0;"
+#define  SELECT_SPEAK_SPOT_CONTENT_BYID @"SELECT SpeakSpotContent FROM T_SpeakContent WHERE SpotID = %d;"
+
+#define  DELETE_Scenic                  @"DELETE FROM T_Scenic;"
+#define  INSERT_Scenic                  @"INSERT OR REPLACE INTO T_Scenic(SpotID,ViewName,BufferIn,BufferOut,SpeakContentIn,SpeakContentOut) VALUES(?,?,?,?,?,?);"
+
+#define SELECT_ALL_TEAMCHAT             @"SELECT * FROM T_TeamChat;"
+#define SELECT_SINGLE_TEAMCHAT          @"SELECT * FROM T_TeamChat WHERE ID = %d;"
+#define INSERT_TEAMCHAT                 @"INSERT INTO T_TeamChat(ID,ChatCreator,ChatCreatorID,ChatName,ChatNameID) VALUES(?,?,?,?,?);"
+#define DELETE_ALL_TEAMCHAT         @"DELETE FROM T_TeamChat;"
+#define DELETE_SINGLE_TEAMCHAT      @"DELETE * FROM T_TeamChat WHERE ID = %d;"
+
+
+#define SELECT_ALL_GROUPCHAT            @"SELECT * FROM T_TeamGroupChat;"
+#define SELECT_SINGLE_GROUPCHAT         @"SELECT * FROM T_TeamGroupChat WHERE ID = %d;"
+#define INSERT_GROUPCHAT                @"INSERT INTO T_TeamGroupChat(TeamID,SenderID,ChatContent,ChatTime,SenderName) VALUES(?,?,?,?,?);"
+#define DELETE_ALL_GROUPCHAT            @"DELETE FROM T_TeamGroupChat;"
+#define DELETE_SINGLE_GROUPCHAT         @"DELETE * FROM T_TeamGroupChat WHERE ID = %d;"
+
+
+#define SELECT_ALL_SINGLECHAT           @"SELECT * FROM T_TeamSingleChat;"
+#define SELECT_SINGLE_SINGLECHA         @"SELECT * FROM T_TeamSingleChat WHERE ID = %d;"
+
+
+#define INSERT_SINGLECHAT               @"INSERT INTO T_TeamSingleChat(TeamID,SenderID,ChatContent,ChatTime,ReceiveID,ReceiveName) VALUES(?,?,?,?,?,?);"
+#define DELETE_ALL_SINGLECHAT           @"DELETE FROM T_TeamSingleChat;"
+#define DELETE_SINGLE_SINGLECHAT        @"DELETE * FROM T_TeamSingleChat WHERE ID = %d;"
+
+#endif

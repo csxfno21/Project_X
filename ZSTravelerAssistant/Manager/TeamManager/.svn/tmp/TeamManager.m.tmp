@@ -1,0 +1,655 @@
+//
+//  TeamManager.m
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-10-27.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "TeamManager.h"
+#import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonCryptor.h>
+#import "GTMBase64.h"
+#import "OpenUDID.h"
+#define  TEAM_TIME_OUT          10
+#define  DESKEY                 @"ABCDEFGHIJKLMNOPjameking"
+
+static TeamManager *manager;
+@interface TeamManager(Private)
+
+@end
+@implementation TeamManager
+ 
+- (id)init
+{
+    if(self = [super init])
+    {
+        teamManagerNotifications = [[NSMutableArray alloc] init];
+        [self connectSocketServer];
+    }
+    return self;
+}
+
++(id)allocWithZone:(NSZone *)zone
+{
+    @synchronized(self)
+    {
+        if (manager == nil)
+        {
+            manager = [super allocWithZone:zone];
+            return manager;
+        }
+    }
+    return nil;
+}
+
+//类调用函数,释放团队管理者来释放长连接 ;此函数非必要不要调用.
++(void)freeInstance
+{
+    SAFERELEASE(manager)
+}
+// 返回 manager对象指针
++(TeamManager *)sharedInstanced
+{
+    @synchronized(self)
+    {
+        if(manager == nil)
+        {
+            manager = [[TeamManager alloc] init];
+        }
+    }
+    return manager;
+}
+
+#pragma mark ********************* 内部 SOCKET 开始*******************************
+- (void)onSocket:(AsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port
+{
+    //物理连接后 
+    _isConnected = YES;
+    //连接成功
+    NSLog(@"socket connect success");
+    //连接成功后 等待接收数据 保持长连接
+    [sock readDataWithTimeout:-1 tag:0];
+    
+   [self teamRequestLogin:[OpenUDID value] withPwd:SOCKTE_LOGIN_PSW];
+}
+
+// 接收 服务端 返回数据
+- (void)onSocket:(AsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
+{
+    NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF16BigEndianStringEncoding];
+    [self classificationInfo:msg];
+    SAFERELEASE(msg)
+//    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:msg delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确定", nil];
+//    [alert show];
+//    SAFERELEASE(alert)
+    //接收到数据后 继续等待接收数据 保持长连接
+    [sock readDataWithTimeout:-1 tag:0];
+    
+}
+
+// 套接字 断开前
+- (void)onSocket:(AsyncSocket *)sock willDisconnectWithError:(NSError *)err
+{
+    //判断错误原因  断开连接  超时等
+    if(err == nil)return;
+    if(err.code == E_SOCKETERR_TIMEOUT)
+    {
+        //超时
+        //判断是 登录超时
+        if(sock.isConnected)
+        {
+            //接口请求超时
+        }
+        else
+        {
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedConnectError:)])
+                {
+                    [delegate receivedConnectError:E_SOCKETERR_TIMEOUT];
+                }
+            }
+        }
+    }
+    else
+    {
+        if(sock.isConnected)
+        {
+            //接口请求其它错误
+            
+        }
+        else
+        {
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedConnectError:)])
+                {
+                    [delegate receivedConnectError:err.code];
+                }
+            }
+        }
+    }
+}
+// 套接字 断开
+- (void)onSocketDidDisconnect:(AsyncSocket *)sock
+{
+    if(!socketClient.isConnected)//如果是套接字断开了 自动连接
+    {
+        _isConnected = NO;
+        if (!fromUserDisConnect)
+        {
+            //自动连接 ,判断当前 的错误原因 ，如是网络错误，等待网络重新连接再次连接
+            NetworkStatus netWorkStatus = [PublicUtils getNetState];
+            if(netWorkStatus == kNotReachable)//当前网络错误，等待网络重新连接
+            {
+                [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(netConnect:) name:NOTIFY_NETCONNECT object:nil];
+                return;
+            }
+            else
+            {
+                [self connectSocketServer];
+            }
+
+        }
+    }
+}
+
+-(void) encrypAndSendMsg:(NSString*)strMsg
+{
+    strMsg = [self encryptUseDES:strMsg];       //加密后的数据
+    strMsg = [NSString stringWithFormat:@"[length=%d]%@",[strMsg length],strMsg];       //添加长度信息
+    NSData * msgData = [strMsg dataUsingEncoding:NSUTF16BigEndianStringEncoding];
+    //TODO 发送
+    if(socketClient && socketClient.isConnected)
+    {
+        [socketClient writeData:msgData withTimeout:TEAM_TIME_OUT tag:0];
+    }
+    else
+    {
+        [self connectSocketServer];
+    }
+}
+
+#pragma mark - 登录  userName:登录名   pwd:登录密码
+- (void)teamRequestLogin:(NSString*)userName withPwd:(NSString*)pwd
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@%@%@",REQUEST_HEAD_ANYONE_T0_SERVER,STRSPLITER,FC_USERLOGIN,STRSPLITER,userName,STRSPLITER,pwd];
+    [self encrypAndSendMsg:strRequest];
+    
+}
+#pragma mark -  登出
+- (void)teamRequestLogout
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_USERLOGOUT];
+    [self encrypAndSendMsg:strRequest];
+}
+
+// 对消息进行分类
+-(void)classificationInfo:(NSString*)msg
+{
+    int fromIndex = [msg rangeOfString:@"]"].location+1;
+    if(msg.length <= fromIndex)
+    {
+        NSLog(@"______Socket recive msg is wrong,the message is %@",msg);
+        return;
+    }
+    msg = [msg substringFromIndex:fromIndex];       //去除[length=..]
+    msg = [msg stringByReplacingOccurrencesOfString:@"%" withString:@""];     //去除%%%%
+    msg = [self decryptUseDES:msg];     //解密信息
+    NSArray* msgArray = [msg componentsSeparatedByString:STRSPLITER];
+    if (!ISARRYCLASS(msgArray) || msgArray.count < 1)
+    {
+        NSLog(@"______Socket recive msg is wrong,the message is %@",msg);
+        return;
+    }
+    NSString* functionCode = ReplaceNULL2Empty([PublicUtils StringArry:msgArray atIndex:1]);
+    switch ([functionCode intValue])
+    {
+        case FC_RECEIVE_RECEIVEALARMHANDLE:   // 已接警提示（已有工作人员处理）
+            
+            break;
+        case FC_RECEIVE_SENDSTUFFPOSITION:   // 接警工作人员目前位置
+            
+            break;
+        case FC_RECEIVE_SENDANNOUNCEMENT:   // 发布景区公告
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedJoinToTeamResult:)])
+                {
+                    [delegate receivedMsgFromScenic:[PublicUtils StringArry:msgArray atIndex:2] withTime:[PublicUtils StringArry:msgArray atIndex:3]];
+                }
+            }
+            break;
+        case FC_RECEIVE_SENDMSGTOUSER:   // 指定用户发送
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedMsgFromTeammat:withContent:withTime:)])
+                {
+                    [delegate receivedMsgFromTeammat:[PublicUtils StringArry:msgArray atIndex:2] withContent:[PublicUtils StringArry:msgArray atIndex:3] withTime:[PublicUtils StringArry:msgArray atIndex:4]];
+                }
+            }
+            break;
+        case FC_RECEIVE_RECEIVEALARMUNHANDLE:   // 已接警提示（暂未有工作人员处理）
+            
+            break;
+        case FC_RECEIVE_NOTIFYRESUCEED:   // 通知救援完成
+            
+            break;
+        case FC_RECEIVE_ALARMFAILED :   // 接收求救请求失败信息
+            
+            break;
+        case FC_RECEIVE_SENDMEMBERINFOS:   // 接收队伍内成员资料
+        {
+            NSMutableArray *arryTeammatInfo = [[[NSMutableArray alloc] init] autorelease];     //团队成员资料
+            
+            for (int i = 2; i < msgArray.count;i++)        //构造团队成员资料
+            {
+                TeamMatesInfo_entity *entity = [[TeamMatesInfo_entity alloc] init];
+                entity.ID = [msgArray objectAtIndex:i];
+                entity.nickName = [msgArray objectAtIndex:++i];
+                entity.longitude = [msgArray objectAtIndex:++i];
+                entity.latitude = [msgArray objectAtIndex:++i];
+                entity.state = [msgArray objectAtIndex:++i];
+                
+                [arryTeammatInfo addObject:entity];
+                SAFERELEASE(entity)
+            }
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveTeammatInfo:)])
+                {
+                    [delegate receiveTeammatInfo:arryTeammatInfo];
+                }
+            }
+            
+        }
+            break;
+        case FC_RECEIVE_SENDCREATETEAMRESULT:   // 接收新建团队结果
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedCreateTeamResult:)])
+                {
+                    [delegate receivedCreateTeamResult:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_SENDADDTOTEAMRESULT:   // 接收加入团队结果
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedJoinToTeamResult:)])
+                {
+                    [delegate receivedJoinToTeamResult:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_SENDTEAMMSG:   // 接收团队内消息
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receivedMsgFromTeam:)])
+                {
+                    [delegate receivedMsgFromTeammat:[PublicUtils StringArry:msgArray atIndex:2] withContent:[PublicUtils StringArry:msgArray atIndex:3] withTime:[PublicUtils StringArry:msgArray atIndex:4]];
+                }
+            }
+            break;
+        case FC_RECEIVE_QUITTEAMRESULT:   // 接收退出团队消息
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveQuitTeamResult:)])
+                {
+                    [delegate receiveQuitTeamResult:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_DISMISTEAMRESULT :   // 接收解散团队消息
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveDismisTeamResult:)])
+                {
+                    [delegate receiveDismisTeamResult:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_FINDTEAMLIST:   // 接收团队列表
+        {
+            NSMutableArray *arryTeam = [[[NSMutableArray alloc] init] autorelease];     //团队列表
+            if ([[PublicUtils StringArry:msgArray atIndex:2] isEqualToString:@"1"]) //获取失败
+            {
+                NSLog(@"接收团队列表失败");
+                return;
+            }
+            else
+            {
+                for (int i = 3; i < msgArray.count;)        //构造团队列表
+                {
+                    
+                    TeamList_entity *entity = [[[TeamList_entity alloc] init] autorelease];
+                    entity.teamID = [msgArray objectAtIndex:i];
+                    entity.teamName = [msgArray objectAtIndex:i+1];
+                    entity.teamCreator = [msgArray objectAtIndex:i+2];
+                    i += 3;
+                    [arryTeam addObject:entity];
+                }
+                for(int i = 0;i<teamManagerNotifications.count;i++)
+                {
+                    id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                    if(delegate && [delegate respondsToSelector:@selector(receiveTeamList:)])
+                    {
+                        [delegate receiveTeamList:arryTeam];
+                    }
+                }
+            }
+        }
+            break;
+        case FC_RECEIVE_SENDTEAMPOSITION:   // 推送团队团员的位置信息
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveTeammatePosition:lon:lat:)])
+                {
+                    [delegate receiveTeammatePosition:[PublicUtils StringArry:msgArray atIndex:2] lon:[PublicUtils StringArry:msgArray atIndex:3] lat:[PublicUtils StringArry:msgArray atIndex:4]];
+                }
+            }
+            break;
+        case FC_RECEIVE_SENDTEAMINFO:   // 推送队友状态
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveTeamList:)])
+                {
+                    [delegate receiveTeammatesStatus:[PublicUtils StringArry:msgArray atIndex:2] onlineStatus:[PublicUtils StringArry:msgArray atIndex:3] nickName:[PublicUtils StringArry:msgArray atIndex:4] where:[PublicUtils StringArry:msgArray atIndex:5]];
+                }
+            }
+            break;
+        case FC_RECEIVE_FAILDREFRESHMSG:   // 主动刷新信息失败
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveTeamList:)])
+                {
+                    [delegate receiveRefreshInfoStatus:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_FAILDSENDTEAMMSG:   // 主动发送团队消息失败
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveTeamList:)])
+                {
+                    [delegate receiveSendMsgStatus:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_HEARTCLIENT:   // 心跳检测结果
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveTeamList:)])
+                {
+                    [delegate receiveHeartTestMsg:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        case FC_RECEIVE_VERIFICATIONFROMSERVER:     // 服务器验证结果
+            for(int i = 0;i<teamManagerNotifications.count;i++)
+            {
+                id<TeamManagerDelegate> delegate = (id)[[teamManagerNotifications objectAtIndex:i] longValue];
+                if(delegate && [delegate respondsToSelector:@selector(receiveLoginResult:)])
+                {
+                    [delegate receiveLoginResult:[PublicUtils StringArry:msgArray atIndex:2]];
+                }
+            }
+            break;
+        default:
+            break;
+    }
+}
+#pragma mark ********************* 内部 SOCKET 结束*******************************
+
+
+
+#pragma mark ********************* 外部 调用 接口 开始*******************************
+
+#pragma mark - 连接 套接字 注意:正常情况下不要主动去连接，manager 会主动连接 
+- (void)connectSocketServer
+{
+    if(!socketClient)socketClient = [[AsyncSocket alloc]initWithDelegate:self];
+    if(!socketClient.isConnected)
+    {
+        NSError *error = nil;
+        [socketClient connectToHost:TEAM_HOST onPort:TEAM_PORT withTimeout:TEAM_TIME_OUT error:&error];
+    }
+}
+
+#pragma mark -  断开套接字 注意:正常情况下不要主动断开, 正常断开后会自动连接,主动断开后 需要手动连接
+- (void)disConnectSocketServer
+{
+    if(socketClient && socketClient.isConnected)
+    {
+        fromUserDisConnect = YES;
+        [socketClient disconnect];
+    }
+}
+
+
+// 修改个人信息
+- (void)teamRequestModifyInfo:(NSString*) alis withWhere:(NSString*) where
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_MODIFYUSERINFO,STRSPLITER,alis,STRSPLITER,STRSPLITER,where];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark - 创建团队
+- (void)teamrequestCreateTeam:(NSString*)teamName withPsw:(NSString*) teamPsw
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_CRATETEAM,STRSPLITER,teamName,STRSPLITER,teamPsw];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark - 加入团队
+- (void)teamRequestAddToTeam:(NSString*) teamName withPsw:(NSString*) teamPsw
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_ADDTOTEAM,STRSPLITER,teamName,STRSPLITER,teamPsw];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark - 发文本消息  msg:发送的消息  who:发给谁
+- (void)teamRequestSendMessage:(NSString*)msg toWho:(id)who
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_SENDMSGTOTEAM,STRSPLITER,who,STRSPLITER,msg];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark -  发送群组消息 msg 发送到群组的消息
+- (void)teamRequestSendGroupMessage:(NSString*)msg
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_SENDMSGTOGROUP,STRSPLITER,msg];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark -  发送报警消息到信息中心 location:报警的内容 (看接口) type:报警的类别
+- (void)teamRequestSendEmergency:(CLLocationCoordinate2D)location toType:(int)type
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%f%@%f%@%d",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_USERASKHELP,STRSPLITER,location.longitude,STRSPLITER,location.latitude,STRSPLITER,type];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark - 获取当前所有的在线团队
+- (void)teamRequestQueryOnLineTeam
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_VISITORONLINETEAN];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark - 获取数据库中游客团队
+- (void)teamRequestQueryAllTeam:(REQUEST_TEAMLIST_TYPE)type lastID:(int)id
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%d%@%d",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_VISITORTEAM,STRSPLITER,type,STRSPLITER,id];
+    [self encrypAndSendMsg:strRequest];
+}
+//#pragma mark - 主动刷新 队友的状态
+//- (void)teamRequestRefreshMemberState
+//{
+//    NSString *strRequest = [NSString stringWithFormat:@"%@%@%d",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_RECEIVE_SENDTEAMINFO];
+//    [self encrypAndSendMsg:strRequest];
+//}
+#pragma mark - 获取当前团队的所有团员
+- (void)teamRequestTeamMembers
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_REQUESTTEAMMEMBER];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark - 上传头像
+- (void)teamRequestPushHeadIcon:(id)icon
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_UPVISITORPORTRAIT,STRSPLITER,icon];
+    [self encrypAndSendMsg:strRequest];
+}
+#pragma mark -  下载头像
+- (void)teamRequestDownloadHeadIcon:(id)request
+{
+    NSString *strRequest = [NSString stringWithFormat:@"%@%@%@%@%@",REQUEST_HEAD_VISITER_TO_SERVER,STRSPLITER,FC_SEND_DOWNVISITORPORTRAIT,STRSPLITER,request];
+    [self encrypAndSendMsg:strRequest];
+}
+
+- (void)registerTeamManagerNotification:(id<TeamManagerDelegate>)delegate
+{
+    if(delegate)
+    {
+        NSNumber *number = POINT2NUMBER(delegate);
+        if (![teamManagerNotifications containsObject:number])
+        {
+            [teamManagerNotifications addObject:number];
+        }
+        
+    }
+}
+- (void)unRegisterTeamMapManagerNotification:(id<TeamManagerDelegate>)delegate
+{
+    if(delegate)
+    {
+        NSNumber *number = POINT2NUMBER(delegate);
+        [teamManagerNotifications removeObject:number];
+    }
+}
+//阻止外部错误修改计数
+- (id)retain
+{
+    return self;
+}
+//阻止外面错误释放
+- (id)autorelease
+{
+    return self;
+}
+#pragma mark ********************* 外部 调用 接口 结束*******************************
+
+/******************************************************************************
+ 函数名称  : encryptUseDES
+ 函数描述  : DES加密
+ 输入参数  : clearText 要加密的数据
+ 输出参数  : N/A
+ 返回值    : 返回加密后的数据
+ 备注     : 梁谢超
+ ******************************************************************************/
+#pragma mark -DES加密
+-(NSString *) encryptUseDES:(NSString *)clearText
+{
+    NSString *ciphertext = nil;
+    NSData *textData = [clearText dataUsingEncoding:NSUTF16StringEncoding];
+    NSUInteger dataLength = [clearText length];
+    dataLength = [textData length];
+    unsigned char buffer[1024];
+    memset(buffer, 0, sizeof(char));
+    size_t numBytesEncrypted = 0;
+    Byte iv[] = {0x12, 0x34, 0x56, 0x78, 0x12, 0x34, 0x56, 0x78};
+    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithm3DES,
+                                          kCCOptionPKCS7Padding,
+                                          [DESKEY UTF8String], kCCKeySize3DES,
+                                          iv,
+                                          [textData bytes]  , dataLength,
+                                          buffer, 1024,
+                                          &numBytesEncrypted);
+    if (cryptStatus == kCCSuccess) NSLog(@"SUCCESS");
+    else if (cryptStatus == kCCParamError) NSLog(@"PARAM ERROR");
+    else if (cryptStatus == kCCBufferTooSmall) NSLog (@"BUFFER TOO SMALL");
+    else if (cryptStatus == kCCMemoryFailure) NSLog (@"MEMORY FAILURE");
+    else if (cryptStatus == kCCAlignmentError) NSLog (@"ALIGNMENT");
+    else if (cryptStatus == kCCDecodeError) NSLog (@"DECODE ERROR");
+    else if (cryptStatus == kCCUnimplemented) NSLog (@"UNIMPLEMENTED");
+    if (cryptStatus == kCCSuccess)
+    {
+        NSLog(@"DES加密成功");
+        NSData *data = [NSData dataWithBytes:buffer length:(NSUInteger)numBytesEncrypted];
+        ciphertext = [GTMBase64 stringByEncodingData:data];
+    }
+    else{
+        NSLog(@"DES加密失败");
+    }
+    return ciphertext;
+}
+/******************************************************************************
+ 函数名称  : decryptUseDES
+ 函数描述  : DES解密
+ 输入参数  : plainText 要解密的数据
+ 输出参数  : N/A
+ 返回值    : 返回解密后的数据
+ 备注     : 梁谢超
+ ******************************************************************************/
+#pragma mark -DES解密
+-(NSString *) decryptUseDES:(NSString *)plainText
+{
+    NSString *cleartext = nil;
+    NSData *textData = [GTMBase64 decodeString:plainText];
+    NSUInteger dataLength = [textData length];
+    unsigned char buffer[6000];
+    memset(buffer, 0, sizeof(char));
+    size_t numBytesEncrypted = 0;
+    Byte iv[] = {0x12, 0x34, 0x56, 0x78, 0x12, 0x34, 0x56, 0x78};
+    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithm3DES,
+                                          kCCOptionPKCS7Padding,
+                                          [DESKEY UTF8String], kCCKeySize3DES,
+                                          iv,
+                                          [textData bytes]  , dataLength,
+                                          buffer, 6000,
+                                          &numBytesEncrypted);
+    if (cryptStatus == kCCSuccess) NSLog(@"SUCCESS");
+    else if (cryptStatus == kCCParamError) NSLog(@"PARAM ERROR");
+    else if (cryptStatus == kCCBufferTooSmall) NSLog (@"BUFFER TOO SMALL");
+    else if (cryptStatus == kCCMemoryFailure) NSLog (@"MEMORY FAILURE");
+    else if (cryptStatus == kCCAlignmentError) NSLog (@"ALIGNMENT");
+    else if (cryptStatus == kCCDecodeError) NSLog (@"DECODE ERROR");
+    else if (cryptStatus == kCCUnimplemented) NSLog (@"UNIMPLEMENTED");
+    if (cryptStatus == kCCSuccess)
+    {
+        NSLog(@"DES解密成功");
+        cleartext = [[NSString alloc] initWithBytes:buffer length:numBytesEncrypted encoding:NSUTF16StringEncoding];
+    }
+    else{
+        NSLog(@"DES解密失败");
+    }
+    return cleartext;
+}
+
+// 网络重新连接后 自动连接
+- (void)netConnect:(id)sender
+{
+    [self connectSocketServer];
+}
+-(void)dealloc
+{
+    _isConnected = NO;
+    if(socketClient.isConnected)
+    {
+        [socketClient disconnect];
+    }
+    SAFERELEASE(socketClient)
+    SAFERELEASE(teamManagerNotifications)
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NOTIFY_NETCONNECT object:nil];
+    [super dealloc];
+}
+@end

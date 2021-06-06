@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/IOS/!svn/ver/841/nj/ZSTrunk_nj/ZSTravelerAssistant
+END
+main.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/main.m
+END
+ZSTravelerAssistant-Prefix.pch
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/IOS/!svn/ver/714/nj/ZSTrunk_nj/ZSTravelerAssistant/ZSTravelerAssistant-Prefix.pch
+END
+libejtts.a
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/IOS/!svn/ver/681/nj/ZSTrunk_nj/ZSTravelerAssistant/libejtts.a
+END
+Default@2x.png
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Default@2x.png
+END
+ZSTraveler.sqlite
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/IOS/!svn/ver/804/nj/ZSTrunk_nj/ZSTravelerAssistant/ZSTraveler.sqlite
+END
+AppDelegate.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/AppDelegate.h
+END
+AppDelegate.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/IOS/!svn/ver/780/nj/ZSTrunk_nj/ZSTravelerAssistant/AppDelegate.m
+END
+Default.png
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Default.png
+END
+Default-568h@2x.png
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Default-568h@2x.png
+END
+ZSTravelerAssistant-Info.plist
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/IOS/!svn/ver/730/nj/ZSTrunk_nj/ZSTravelerAssistant/ZSTravelerAssistant-Info.plist
+END

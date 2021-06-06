@@ -1,0 +1,53 @@
+//
+//  BaseNavController.m
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-7-23.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "BaseNavController.h"
+
+@interface BaseNavController ()
+
+@end
+
+@implementation BaseNavController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [[LanguageManager sharedInstanced] registerLanugageNotification:self];
+}
+- (void)updateLanguage:(id)sender
+{
+    
+    
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark
+#pragma mark languageManagerDelegate
+- (void)notifiChangelanguage
+{
+    [self updateLanguage:self];
+}
+- (void)dealloc
+{
+    [[LanguageManager sharedInstanced] unRegisterLanugageNotification:self];
+    [super dealloc];
+}
+@end

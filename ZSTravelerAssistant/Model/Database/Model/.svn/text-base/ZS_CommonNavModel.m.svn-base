@@ -1,0 +1,250 @@
+//
+//  ZS_CommonNav.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "ZS_CommonNavModel.h"
+
+@implementation ZS_CommonNavModel
+
+-(NSArray *)quaryAllCommonNav
+{
+    NSMutableArray *commonNavArray = [NSMutableArray array];
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    NSString *SQL_WHERE = [NSString stringWithFormat:@"%@%d OR %@%d OR %@%d OR %@%d OR %@%d OR %@%d",@"NavType = ",POI_PARK,@"NavType = ",POI_SIGHT_SEE,@"NavType = ",POI_SPOT_BUS,@"NavType = ",POI_EXPORT_L,@"NavType = ",POI_EXPORT,@"NavType = ",POI_ENTRANCE];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SELECT_ALL_CommonNav,SQL_WHERE]];
+    while ([rs next])
+    {
+        ZS_CommonNav_entity *entity = [[ZS_CommonNav_entity alloc]init];
+        entity.ID = [rs intForColumn:@"ID"];
+        entity.NavType = ReplaceNULL2Empty([rs stringForColumn:@"NavType"]);
+        entity.NavTitle = ReplaceNULL2Empty([rs stringForColumn:@"NavTitle"]);
+        entity.NavLng = ReplaceNULL2Empty([rs stringForColumn:@"NavLng"]);
+        entity.NavLat = ReplaceNULL2Empty([rs stringForColumn:@"NavLat"]);
+        entity.NavContent = ReplaceNULL2Empty([rs stringForColumn:@"NavContent"]);
+        entity.NavInSpotID = ReplaceNULL2Empty([rs stringForColumn:@"NavInSpotID"]);
+        entity.NavIID = ReplaceNULL2Empty([rs stringForColumn:@"NavID"]);
+        entity.NavPosition = ReplaceNULL2Empty([rs stringForColumn:@"NavPosition"]);
+        entity.NavRemark = ReplaceNULL2Empty([rs stringForColumn:@"NavRemark"]);
+        entity.POITourCar = ReplaceNULL2Empty([rs stringForColumn:@"POITourCar"]);
+        entity.POIPark = ReplaceNULL2Empty([rs stringForColumn:@"POIPark"]);
+        entity.DisToPosition = [PublicUtils GetDistanceS:[MapManager sharedInstanced].oldLocation2D.longitude withlat1:[MapManager sharedInstanced].oldLocation2D.latitude withlng2:[entity.NavLng doubleValue] withlat2:[entity.NavLat doubleValue]];
+        [commonNavArray addObject:entity];
+        [entity release];
+    }
+    [rs close];
+    NSSortDescriptor *sortDescriptor = [[[NSSortDescriptor alloc] initWithKey:@"DisToPosition" ascending:YES] autorelease];
+    NSArray *sortDescriptors = [NSArray arrayWithObject:sortDescriptor];
+    NSArray *sortedArray = [commonNavArray sortedArrayUsingDescriptors:sortDescriptors];
+    return sortedArray;
+}
+
+/**
+ *  type 查询类型
+ *  spotID 所属景区
+ *
+ */
+- (NSArray*)quaryAllPoi:(int)spotID withType:(NSArray*)args
+{
+    NSMutableArray *commonNavArray = [NSMutableArray array];
+    if (args.count == 0)
+    {
+        return commonNavArray;
+    }
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    NSString *SQL_WHERE = @"";
+    for (NSNumber*number in args)
+    {
+        if (SQL_WHERE.length == 0)
+        {
+            SQL_WHERE = [NSString stringWithFormat:@"NavType = %d",number.intValue];
+        }
+        else
+        {
+            SQL_WHERE = [NSString stringWithFormat:@"%@ OR NavType = %d",SQL_WHERE,number.intValue];
+        }
+    }
+    if(spotID != -1)
+    SQL_WHERE = [NSString stringWithFormat:@"%@ AND NavInSpotID = %d",SQL_WHERE,spotID];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SELECT_ALL_CommonNav,SQL_WHERE]];
+    while ([rs next])
+    {
+        ZS_CommonNav_entity *entity = [[ZS_CommonNav_entity alloc]init];
+        entity.ID = [rs intForColumn:@"ID"];
+        entity.NavType = ReplaceNULL2Empty([rs stringForColumn:@"NavType"]);
+        entity.NavTitle = ReplaceNULL2Empty([rs stringForColumn:@"NavTitle"]);
+        entity.NavLng = ReplaceNULL2Empty([rs stringForColumn:@"NavLng"]);
+        entity.NavLat = ReplaceNULL2Empty([rs stringForColumn:@"NavLat"]);
+        entity.NavContent = ReplaceNULL2Empty([rs stringForColumn:@"NavContent"]);
+        entity.NavInSpotID = ReplaceNULL2Empty([rs stringForColumn:@"NavInSpotID"]);
+        entity.NavIID = ReplaceNULL2Empty([rs stringForColumn:@"NavID"]);
+        entity.NavPosition = ReplaceNULL2Empty([rs stringForColumn:@"NavPosition"]);
+        entity.NavRemark = ReplaceNULL2Empty([rs stringForColumn:@"NavRemark"]);
+        entity.POITourCar = ReplaceNULL2Empty([rs stringForColumn:@"POITourCar"]);
+        entity.POIPark = ReplaceNULL2Empty([rs stringForColumn:@"POIPark"]);
+        entity.DisToPosition = [PublicUtils GetDistanceS:[MapManager sharedInstanced].oldLocation2D.longitude withlat1:[MapManager sharedInstanced].oldLocation2D.latitude withlng2:[entity.NavLng doubleValue] withlat2:[entity.NavLat doubleValue]];
+        [commonNavArray addObject:entity];
+        [entity release];
+    }
+    [rs close];
+    NSSortDescriptor *sortDescriptor = [[[NSSortDescriptor alloc] initWithKey:@"DisToPosition" ascending:YES] autorelease];
+    NSArray *sortDescriptors = [NSArray arrayWithObject:sortDescriptor];
+    NSArray *sortedArray = [commonNavArray sortedArrayUsingDescriptors:sortDescriptors];
+    return sortedArray;
+}
+
+- (ZS_CommonNav_entity*)getPOI:(int)poiID
+{
+    ZS_CommonNav_entity *entity = [[[ZS_CommonNav_entity alloc]init] autorelease];
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SELECT_SINGLE_CommonNav,poiID]];
+    while ([rs next])
+    {
+        entity.ID = [rs intForColumn:@"ID"];
+        entity.NavType = ReplaceNULL2Empty([rs stringForColumn:@"NavType"]);
+        entity.NavTitle = ReplaceNULL2Empty([rs stringForColumn:@"NavTitle"]);
+        entity.NavLng = ReplaceNULL2Empty([rs stringForColumn:@"NavLng"]);
+        entity.NavLat = ReplaceNULL2Empty([rs stringForColumn:@"NavLat"]);
+        entity.NavContent = ReplaceNULL2Empty([rs stringForColumn:@"NavContent"]);
+        entity.NavInSpotID = ReplaceNULL2Empty([rs stringForColumn:@"NavInSpotID"]);
+        entity.NavIID = ReplaceNULL2Empty([rs stringForColumn:@"NavID"]);
+        entity.NavPosition = ReplaceNULL2Empty([rs stringForColumn:@"NavPosition"]);
+        entity.NavRemark = ReplaceNULL2Empty([rs stringForColumn:@"NavRemark"]);
+        entity.POITourCar = ReplaceNULL2Empty([rs stringForColumn:@"POITourCar"]);
+        entity.POIPark = ReplaceNULL2Empty([rs stringForColumn:@"POIPark"]);
+    }
+    [rs close];
+    return entity;
+
+}
+
+- (NSString*)getPOITypeByID:(int)poiID
+{
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SELECT_POITypeByID,poiID]];
+    NSString *strNavType = @"";
+    while ([rs next])
+    {
+        strNavType = ReplaceNULL2Empty([rs stringForColumn:@"NavType"]);
+    }
+    [rs close];
+    return strNavType;
+}
+
+- (BOOL)updatePoiInfo:(NSArray*)data
+{
+    BOOL success = NO;
+    if (nil == data)
+    {
+        return success;
+    }
+    
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    [db beginTransaction];
+    [db executeUpdate:DELETE_Poi];
+    for (ZS_CommonNav_entity *entity in data)
+    {
+        [db executeUpdate:INSERT_Poi,entity.NavType,entity.NavTitle,entity.NavLng,entity.NavLat,entity.NavContent,entity.NavInSpotID,entity.NavIID,entity.NavPosition,entity.NavRemark,entity.POITourCar,entity.POIPark,nil];
+    }
+    success = [db commit];
+    
+    return success;
+}
+
+
+
+- (NSArray*)getPOIRelationInfo:(int)parnentID
+{
+    NSMutableArray *poiRelationArray = [NSMutableArray array];
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SECECT_POI_RELATION_BY_PARIENTID,parnentID]];
+    while ([rs next])
+    {
+        ZS_PoiRelation_entity *entity = [[[ZS_PoiRelation_entity alloc] init] autorelease];
+        
+        entity.ID = [rs intForColumn:@"id"];
+        entity.PoiID = ReplaceNULL2Empty([rs stringForColumn:@"PoiID"]);
+        entity.ParentID = ReplaceNULL2Empty([rs stringForColumn:@"ParentID"]);
+        entity.POITitle = ReplaceNULL2Empty([rs stringForColumn:@"POITitle"]);
+        entity.POIType = ReplaceNULL2Empty([rs stringForColumn:@"POIType"]);
+        entity.POILng = ReplaceNULL2Empty([rs stringForColumn:@"POILng"]);
+        entity.POILat = ReplaceNULL2Empty([rs stringForColumn:@"POILat"]);
+        entity.POIBuffer = ReplaceNULL2Empty([rs stringForColumn:@"POIBuffer"]);
+        [poiRelationArray addObject:entity];
+    }
+    [rs close];
+    return poiRelationArray;
+}
+- (ZS_PoiRelation_entity*)getPOIRelationPoiID:(int)parkInID
+{
+    ZS_PoiRelation_entity *entity = [[[ZS_PoiRelation_entity alloc] init] autorelease];
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SECECT_POI_RELATION_BY_POIID,parkInID]];
+    while ([rs next])
+    {
+        entity.ID = [rs intForColumn:@"id"];
+        entity.PoiID = ReplaceNULL2Empty([rs stringForColumn:@"PoiID"]);
+        entity.ParentID = ReplaceNULL2Empty([rs stringForColumn:@"ParentID"]);
+        entity.POITitle = ReplaceNULL2Empty([rs stringForColumn:@"POITitle"]);
+        entity.POIType = ReplaceNULL2Empty([rs stringForColumn:@"POIType"]);
+        entity.POILng = ReplaceNULL2Empty([rs stringForColumn:@"POILng"]);
+        entity.POILat = ReplaceNULL2Empty([rs stringForColumn:@"POILat"]);
+        entity.POIBuffer = ReplaceNULL2Empty([rs stringForColumn:@"POIBuffer"]);
+    }
+    [rs close];
+    return entity;
+
+}
+
+- (NSString*)getParkBufferByID:(int)ID
+{
+    NSString* buffer = @"";
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SELECT_POI_RALATIONBUFFER_BY_ID,ID]];
+    while ([rs next])
+    {
+        buffer = ReplaceNULL2Empty([rs stringForColumn:@"POIBuffer"]);
+    }
+    [rs close];
+    return buffer;
+}
+
+- (BOOL)isPark:(int)ID
+{
+    BOOL bReturn = NO;
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:SELECT_POIREALATIONCOUNT_BY_ID,ID]];
+    while (rs.next)
+    {
+        int cnt = [rs intForColumn:@"cnt"];
+        if (cnt != 0)
+        {
+            bReturn = YES;
+        }
+    }
+    return bReturn;
+}
+
+- (BOOL)updatePOIRelationInfo:(NSArray*)data
+{
+    BOOL success = NO;
+    if (nil == data)
+    {
+        return success;
+    }
+    
+    FMDatabase *db = [FMDatabase sharedDataBase];
+    [db beginTransaction];
+    [db executeUpdate:DELETE_PoiRelation];
+    for (ZS_PoiRelation_entity *entity in data)
+    {
+        [db executeUpdate:INSERT_PoiRelation,entity.PoiID,entity.ParentID,entity.POITitle,entity.POIType,entity.POILng,entity.POILat,entity.POIBuffer,nil];
+    }
+    success = [db commit];
+    
+    return success;
+}
+@end

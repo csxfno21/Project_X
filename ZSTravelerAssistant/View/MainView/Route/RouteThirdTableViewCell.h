@@ -1,0 +1,81 @@
+//
+//  RouteTableViewCell.h
+//  ZSTravelerAssistant
+//
+//  Created by 梁谢超 on 13-7-27.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+
+#import <UIKit/UIKit.h>
+typedef enum
+{
+    ROUTE_MENU_TYPE_DETAIL = 0,
+    ROUTE_MENU_TYPE_LOCATION,
+    ROUTE_MENU_TYPE_NAVIGATION,
+}ROUTE_MENU_TYPE;
+
+@protocol RouteThirdTableViewCellDelegate <NSObject>
+- (void)routeThirdTableViewCellAction:(ROUTE_MENU_TYPE)menuType withIndex:(int)index;
+- (void)routeThirdTableViewAdd:(int)index;
+@end
+
+@interface RouteThirdTableViewCell : UITableViewCell
+{
+    UIImageView *m_IVHead;
+    UILabel *m_LbTitle;
+    UIImageView *m_IVStar;
+    UIImageView *m_IVDis;
+    UILabel *m_LbDisText;
+    UILabel *m_LbDisNum;
+    UILabel *m_LBDisUnit;
+    UIImageView *m_IVPrice;
+    UILabel *m_LbPriceText;
+    UILabel *m_LbPriceNum;
+    UILabel *m_LbPriceUnit;
+    UIImageView *m_IVArrow;
+    UIButton *m_AddButton;
+    UIImageView *m_IVMenuBg;
+    UIImageView *m_IVLocation;
+    UIButton *m_BtnMenuDetail;
+    UIImageView *m_IVMenuDetail;
+    UILabel *m_LBMenuDetail;
+    UIButton *m_BtnMenuLocate;
+    UIImageView *m_IVMenuLocate;
+    UILabel *m_LBMenuLocate;
+    UIButton *m_BtnMenuNavigation;
+    UIImageView *m_IVMenuNavigation;
+    UILabel *m_LBMenuNavigation;
+    UIActivityIndicatorView *loadingView;
+    
+    id<RouteThirdTableViewCellDelegate> cellDelgate;
+}
+@property(assign, nonatomic)BOOL bIsShow;
+@property(assign, nonatomic)id<RouteThirdTableViewCellDelegate> cellDelgate;
+
+@property(retain, nonatomic)UIActivityIndicatorView *loadingView;
+@property(retain, nonatomic)UIImageView *m_IVHead;
+@property(retain, nonatomic)UILabel *m_LbTitle;
+@property(retain, nonatomic)UIImageView *m_IVStar;
+@property(retain, nonatomic)UIImageView *m_IVDis;
+@property(retain, nonatomic)UILabel *m_LbDisText;
+@property(retain, nonatomic)UILabel *m_LbDisNum;
+@property(retain, nonatomic)UILabel *m_LBDisUnit;
+@property(retain, nonatomic)UIImageView *m_IVPrice;
+@property(retain, nonatomic)UILabel *m_LbPricetext;
+@property(retain, nonatomic)UILabel *m_LbPriceNum;
+@property(retain, nonatomic)UILabel *m_LbPriceUnit;
+@property(retain, nonatomic)UIImageView *m_IVArrow;
+@property(retain, nonatomic)UIButton *m_AddButton;
+@property(retain, nonatomic)UIImageView *m_IVMenuBg;
+@property(retain, nonatomic)UIImageView *m_IVLocation;
+@property(retain, nonatomic)UIButton *m_BtnMenuDetail;
+@property(retain, nonatomic)UIImageView *m_IVMenuDetail;
+@property(retain, nonatomic)UILabel *m_LBMenuDetail;
+@property(retain, nonatomic)UIButton *m_BtnMenuLocate;
+@property(retain, nonatomic)UIImageView *m_IVMenuLocate;
+@property(retain, nonatomic)UILabel *m_LBMenuLocate;
+@property(retain, nonatomic)UIButton *m_BtnMenuNavigation;
+@property(retain, nonatomic)UIImageView *m_IVMenuNavigation;
+@property(retain, nonatomic)UILabel *m_LBMenuNavigation;
+@end

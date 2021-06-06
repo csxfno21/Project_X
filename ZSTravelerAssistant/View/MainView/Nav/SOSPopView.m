@@ -1,0 +1,85 @@
+//
+//  SOSPopView.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-8.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+#import <QuartzCore/QuartzCore.h>
+#import "SOSPopView.h"
+ 
+@implementation SOSPopView
+@synthesize delegate;
+
++(SOSPopView *)instanceSOSPopView
+{
+    NSArray* nibView =  [[NSBundle mainBundle] loadNibNamed:@"SOSPopView" owner:nil options:nil];
+    return [nibView objectAtIndex:0];
+}
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if(self = [super initWithCoder:aDecoder])
+    {
+        self.layer.borderColor = [[UIColor lightGrayColor] CGColor];
+        self .layer.borderWidth = 1.0f;
+        self.layer.cornerRadius = 10.0f;
+        self.clipsToBounds = TRUE;
+        overlayView = [[UIControl alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        overlayView.backgroundColor = [UIColor colorWithRed:.16 green:.17 blue:.21 alpha:.5];
+        [overlayView addTarget:self
+                        action:@selector(dismiss)
+              forControlEvents:UIControlEventTouchUpInside];
+        self.mSpotAlarmWarnLabel.text = [Language stringWithName:Scenic_spot_where_security_guards_will_come_to_you_Sure_you_want_to_call_the_police];
+        self.mCancelBtn.titleLabel.text = [Language stringWithName:CANCEL];
+        self.mConfirmBtn.titleLabel.text = [Language stringWithName:CONFIRM];
+    }
+    
+    return self;
+}
+- (IBAction)okAction:(id)sender
+{
+    [self dismiss];
+    if (delegate && [delegate respondsToSelector:@selector(sosPopAction:)])
+    {
+        [delegate sosPopAction:self.tag];
+    }
+}
+
+- (IBAction)cancelAction:(id)sender
+{
+    [self dismiss];
+}
+
+- (void)show
+{
+    UIWindow *keywindow = [[UIApplication sharedApplication] keyWindow];
+    [keywindow addSubview:overlayView];
+    [keywindow addSubview:self];
+    
+    self.center = CGPointMake(keywindow.bounds.size.width/2.0f,
+                              keywindow.bounds.size.height/2.0f);
+    
+}
+- (void)dismiss
+{
+    [UIView animateWithDuration:0.2 animations:^
+     {
+         self.alpha = 0.0f;
+     } completion:^(BOOL finished)
+     {
+         [overlayView removeFromSuperview];
+         [self removeFromSuperview];
+         
+     }];
+}
+-(void)dealloc
+{
+    delegate = nil;
+    SAFERELEASE(overlayView)
+    [_mGoodsStolenLabel release];
+    [_mConfirmBtn release];
+    [_mSpotAlarmWarnLabel release];
+    [_mCancelBtn release];
+    [super dealloc];
+}
+@end

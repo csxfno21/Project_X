@@ -1,0 +1,292 @@
+//
+//  SpotManager.m
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-8-13.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "SpotManager.h"
+static SpotManager *manager;
+@implementation SpotManager
++(SpotManager *)sharedInstance
+{
+    @synchronized(self)
+    {
+        if(manager == nil)
+        {
+            manager = [[SpotManager alloc] init];
+        }
+    }
+    return manager;
+}
+- (id)init
+{
+    
+    if (self = [super init])
+    {
+        _viewSpotCache = [[NSMutableArray alloc] init];
+        _nviewSpotCache = [[NSMutableArray alloc] init];
+        _downLoadCache = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
++(void)freeInstance
+{
+    SAFERELEASE(manager);
+}
++(id)allocWithZone:(NSZone *)zone
+{
+    @synchronized(self)
+    {
+        if (manager == nil)
+        {
+            manager = [super allocWithZone:zone];
+            return manager;
+        }
+    }
+    return nil;
+}
+- (id)retain
+{
+    return self;
+}
+- (id)autorelease
+{
+    return self;
+}
+- (void)requestGetViewSpot :(id)UIDelegate withMoreID:(int)moreID
+{
+    if(UIDelegate == nil)
+    {
+        NSLog(@"requestGetViewSpot Error,UIDelegate can not be nil!");
+        return;
+    }
+    HttpRequest *request = [[HttpRequest alloc] init];
+    request.cmdCode = CC_GET_VIEW_SPOT_MORE;
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = [NSString stringWithFormat:@"%@%@",SERVER_ADDRESS,ACTION_GET_VIEW_SPOT_MORE];
+    
+    //JSON 结构
+    NSMutableDictionary *postData = [[NSMutableDictionary alloc] init];
+    [postData setObject:INTTOOBJ(moreID) forKey:@"InfoID"];
+    SBJsonWriter *writer = [[SBJsonWriter alloc] init];
+    NSString *dataString  = [writer stringWithObject:postData];
+    NSData *requestData = [[[NSData alloc]initWithBytes:[dataString UTF8String] length:strlen([dataString UTF8String])] autorelease];
+    request.postData = requestData;
+    [postData release];
+    [writer release];
+    
+    [[ASIUtil sharedInstance] POSTRequest:request];
+    [request release];
+}
+- (void)requestGetViewSpot:(id)UIDelegate
+{
+    if(UIDelegate == nil)
+    {
+        NSLog(@"requestGetViewSpot Error,UIDelegate can not be nil!");
+        return;
+    }
+    if(_viewSpotCache.count > 0)
+    {
+        HttpBaseResponse *base = [[HttpBaseResponse alloc] init];
+        base.cc_cmd_code = CC_GET_VIEW_SPOT;
+        base.UIDelegate = UIDelegate;
+        base.error_code = E_HTTPSUCCEES;
+        if(base.UIDelegate && [base.UIDelegate respondsToSelector:@selector(callBackToUI:)])
+            [base.UIDelegate callBackToUI:base];
+        [base release];
+        return;
+    }
+    NSArray *cache = [[DataAccessManager sharedDataModel] getAllSpot];
+    NSMutableArray *mtCache = [[[NSMutableArray alloc] initWithArray:cache] autorelease];
+    NSMutableArray *needRemoveEntity = [[[NSMutableArray alloc] init] autorelease];
+    for(ZS_CustomizedSpot_entity *entity in mtCache)
+    {
+        if([@"0" isEqualToString:entity.SpotParentID] && ![@"1" isEqualToString:entity.SpotType])
+        {
+            [needRemoveEntity addObject:entity];
+        }
+    }
+    for (ZS_CustomizedSpot_entity *entity in needRemoveEntity)
+    {
+        [mtCache removeObject:entity];
+    }
+    if(!self.waitUpdate && cache.count > 0)
+    {
+        HttpBaseResponse *base = [[HttpBaseResponse alloc] init];
+        base.cc_cmd_code = CC_GET_VIEW_SPOT;
+        base.UIDelegate = UIDelegate;
+        
+        [_viewSpotCache removeAllObjects];
+        [_viewSpotCache addObjectsFromArray:mtCache];
+        
+        base.error_code = E_HTTPSUCCEES;
+        if(base.UIDelegate && [base.UIDelegate respondsToSelector:@selector(callBackToUI:)])
+            [base.UIDelegate callBackToUI:base];
+        [base release];
+        return;
+    }
+    
+    HttpRequest *request = [[HttpRequest alloc] init];
+    request.cmdCode = CC_GET_VIEW_SPOT;
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = [NSString stringWithFormat:@"%@%@",SERVER_ADDRESS,ACTION_GET_VIEW_SPOT];
+    
+    //JSON 结构
+    NSMutableDictionary *postData = [[NSMutableDictionary alloc] init];
+    SBJsonWriter *writer = [[SBJsonWriter alloc] init];
+    NSString *dataString  = [writer stringWithObject:postData];
+    NSData *requestData = [[[NSData alloc]initWithBytes:[dataString UTF8String] length:strlen([dataString UTF8String])] autorelease];
+    request.postData = requestData;
+    [postData release];
+    [writer release];
+    
+    [[ASIUtil sharedInstance] POSTRequest:request];
+    [request release];
+}
+- (void)requestGetSpot:(id)UIDelegate withInfoID:(int)infoID
+{
+    if(UIDelegate == nil)
+    {
+        NSLog(@"requestGetSpot Error,UIDelegate can not be nil!");
+        return;
+    }
+    HttpRequest *request = [[HttpRequest alloc] init];
+    request.cmdCode = CC_GET_SPOT;
+    request.requestType = MSG;
+    request.delegate = self;
+    request.UIDelegate = UIDelegate;
+    request.url = [NSString stringWithFormat:@"%@%@",SERVER_ADDRESS,ACTION_GET_SPOT];
+    
+    //JSON 结构
+    NSMutableDictionary *postData = [[NSMutableDictionary alloc] init];
+    SBJsonWriter *writer = [[SBJsonWriter alloc] init];
+    [postData setObject:INTTOOBJ(infoID) forKey:@"InfoID"];
+    NSString *dataString  = [writer stringWithObject:postData];
+    NSData *requestData = [[[NSData alloc]initWithBytes:[dataString UTF8String] length:strlen([dataString UTF8String])] autorelease];
+    request.postData = requestData;
+    [postData release];
+    [writer release];
+    
+    [[ASIUtil sharedInstance] POSTRequest:request];
+    [request release];
+    
+}
+
+
+#pragma mark - reciveHttpRespondInfo
+- (void)reciveHttpRespondInfo:(HttpResponse *)response
+{
+    switch (response.cmdCode)
+    {
+        case CC_GET_VIEW_SPOT_MORE:
+        case CC_GET_VIEW_SPOT:
+        case CC_GET_SPOT:
+        {
+            HttpBaseResponse *base = [[HttpBaseResponse alloc] init];
+            base.cc_cmd_code = response.cmdCode;
+            base.UIDelegate = response.UIDelegate;
+            base.error_code = response.errorCode;
+            if(base.error_code ==  E_HTTPSUCCEES)
+            {
+                if(response.data)
+                {
+                    NSString *result = [[NSString alloc] initWithData:response.data  encoding:NSUTF8StringEncoding];
+                    SBJsonParser *jsonP = [[SBJsonParser alloc] init];
+                    NSMutableDictionary *responsedic = [jsonP fragmentWithString:result];
+                    if(ISDICTIONARYCLASS(responsedic))
+                    {
+                        NSDictionary *infoDic = [self getJSONContent:responsedic];
+                        if (ISDICTIONARYCLASS(infoDic))
+                        {
+                            NSArray *infoArray = [infoDic objectForKey:@"spotDetail"];
+                            if(ISARRYCLASS(infoArray))
+                            {
+                                if(response.cmdCode == CC_GET_VIEW_SPOT)
+                                {
+                                    [_viewSpotCache removeAllObjects];
+                                }
+                                else if(response.cmdCode == CC_GET_NVIEW_SPOT)
+                                {
+                                    [_nviewSpotCache removeAllObjects];
+                                }
+                                for (NSDictionary *entityDic in infoArray)
+                                {
+                                    
+                                    ZS_CustomizedSpot_entity *entity = [[[ZS_CustomizedSpot_entity alloc] init] autorelease];
+                                    entity.ID = [ReplaceNULL2Empty([entityDic objectForKey:@"ID"]) intValue];
+                                    entity.SpotID = [entityDic objectForKey:@"SpotID"];
+                                    entity.SpotName = [entityDic objectForKey:@"SpotName"];
+                                    entity.SpotContent = [entityDic objectForKey:@"SpotContent"];
+                                    entity.SpotLength = [entityDic objectForKey:@"SpotLength"];
+                                    entity.SpotStar = [entityDic objectForKey:@"SpotStar"];
+                                    entity.SpotLat = [entityDic objectForKey:@"SpotLat"];
+                                    entity.SpotLng = [entityDic objectForKey:@"SpotLng"];
+                                    entity.SpotTickets = [entityDic objectForKey:@"SpotTickets"];
+                                    entity.SpotImgUrl = [entityDic objectForKey:@"SpotBigImgUrl"];
+                                    entity.SpotSmallUrl = [entityDic objectForKey:@"SpotSmallImgUrl"];
+                                    entity.SpotImgName = [entityDic objectForKey:@"SpotBigImgName"];
+                                    entity.SpotSmallImgName = [entityDic objectForKey:@"SpotSmallImgName"];
+                                    entity.SpotType = [entityDic objectForKey:@"SpotType"];
+                                    entity.SpotBuff = [entityDic objectForKey:@"SpotBuffer"];
+                                    entity.SpotParentID = [entityDic objectForKey:@"SpotParentID"];
+                                    entity.SpotRemark = [entityDic objectForKey:@"SpotRemark"];
+                                    if(response.cmdCode == CC_GET_VIEW_SPOT || response.cmdCode == CC_GET_VIEW_SPOT_MORE)
+                                    {
+                                        [_viewSpotCache addObject:entity];
+                                    }
+                                    else if(response.cmdCode == CC_GET_NVIEW_SPOT || response.cmdCode == CC_GET_NVIEW_SPOT_MORE)
+                                    {
+                                        [_nviewSpotCache addObject:entity];
+                                    }
+                                    else if(response.cmdCode == CC_GET_SPOT)
+                                    [_downLoadCache addObject:entity];
+                                    
+                                }
+                            }
+                            else
+                            {
+                                base.error_code = E_HTTPERR_FAILED;
+                            }
+                        }
+                        else
+                        {
+                            base.error_code = E_HTTPERR_FAILED;
+                        }
+                    }
+                    else
+                    {
+                        base.error_code = E_HTTPERR_FAILED;
+                    }
+                    [result release];
+                    [jsonP release];
+                }
+                else
+                {
+                    base.error_code = E_HTTPERR_FAILED;
+                }
+            }
+            if(base.UIDelegate && [base.UIDelegate respondsToSelector:@selector(callBackToUI:)])
+                [base.UIDelegate callBackToUI:base];
+            [base release];
+            
+            break;
+        }
+        default:
+            break;
+    }
+}
+- (void)dealloc
+{
+    SAFERELEASE(_viewSpotCache)
+    SAFERELEASE(_nviewSpotCache)
+    SAFERELEASE(_downLoadCache)
+    [super dealloc];
+}
+
+@end

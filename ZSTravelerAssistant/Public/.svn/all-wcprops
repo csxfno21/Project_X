@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/Public
+END
+ResourcesDef.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/IOS/!svn/ver/839/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/ResourcesDef.h
+END
+OpenUDID.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/OpenUDID.m
+END
+GTMBase64.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/IOS/!svn/ver/714/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/GTMBase64.h
+END
+PublicDef.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/PublicDef.h
+END
+PublicUtils.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/IOS/!svn/ver/809/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/PublicUtils.h
+END
+GTMBase64.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/IOS/!svn/ver/714/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/GTMBase64.m
+END
+PublicUtils.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/IOS/!svn/ver/809/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/PublicUtils.m
+END
+StringDef.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/IOS/!svn/ver/730/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/StringDef.h
+END
+GTMDefines.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/IOS/!svn/ver/714/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/GTMDefines.h
+END
+OpenUDID.h
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Public/OpenUDID.h
+END

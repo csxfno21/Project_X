@@ -1,0 +1,83 @@
+//
+//  TeamSendMessagePopView.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-22.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+#import <QuartzCore/QuartzCore.h>
+#import "TeamSendMessagePopView.h"
+
+@implementation TeamSendMessagePopView
+@synthesize delegate;
+
++(TeamSendMessagePopView *)instanceSendMessagePopView
+{
+    NSArray *nibView = [[NSBundle mainBundle] loadNibNamed:@"TeamSendMessagePopView" owner:nil options:nil];
+    return [nibView objectAtIndex:0];
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if(self = [super initWithCoder:aDecoder])
+    if (self)
+    {
+        self.layer.borderColor = [[UIColor lightGrayColor] CGColor];
+        self.layer.borderWidth = 1.0f;
+        self.layer.cornerRadius = 10.0f;
+        self.clipsToBounds = TRUE;
+        overlayView = [[UIControl alloc]initWithFrame:[[UIScreen mainScreen] bounds]];
+        overlayView.backgroundColor =  [UIColor colorWithRed:.16 green:.17 blue:.21 alpha:.5];
+        [overlayView addTarget:self
+                        action:@selector(dismiss)
+              forControlEvents:UIControlEventTouchUpInside];
+        self.groupMessageSendBtn.titleLabel.text = [Language stringWithName:MESSAGE_GROUP_SEND];
+        self.cancelBtn.titleLabel.text = [Language stringWithName:CANCEL];
+
+    }
+    return self;
+}
+- (IBAction)groupMessageSendAction:(id)sender
+{
+    [self dismiss];
+    if (delegate && [delegate respondsToSelector:@selector(sendMessagePopViewAction:)])
+    {
+        [delegate respondsToSelector:@selector(sendMessagePopViewAction:)];
+        
+    }
+}
+- (IBAction)cancelAction:(id)sender
+{
+    [self dismiss];
+}
+-(void)show
+{
+    UIWindow *keywindow = [[UIApplication sharedApplication] keyWindow];
+    [keywindow addSubview:overlayView];
+    [keywindow addSubview:self];
+    
+    self.center = CGPointMake(keywindow.bounds.size.width/2.0f,
+                              keywindow.bounds.size.height/2.0f);
+}
+-(void)dismiss
+{
+    [UIView animateWithDuration:0.2 animations:^
+     {
+         self.alpha = 0.0f;
+     } completion:^(BOOL finished)
+     {
+         [overlayView removeFromSuperview];
+         [self removeFromSuperview];
+         
+     }];
+}
+
+- (void)dealloc {
+    [_iImgView release];
+    [_sendToAllLabel release];
+    [_messageTextField release];
+    [_groupMessageSendBtn release];
+    [_cancelBtn release];
+    [super dealloc];
+}
+@end

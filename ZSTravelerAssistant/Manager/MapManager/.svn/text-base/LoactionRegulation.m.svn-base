@@ -1,0 +1,159 @@
+//
+//  LoactionRegulation.m
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-9-18.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "LoactionRegulation.h"
+#import "TTSPlayer.h"
+@implementation LoactionPoint
+@synthesize longitude,latitude,altitude,oldHorizontalAccuracy;
+
+@end
+
+@implementation LoactionRegulation
+- (id)init
+{
+    if (self = [super init])
+    {
+        exceedPoints = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+- (void)clean
+{
+    oldLocation = nil;
+    [self cleanExceedPoints];
+}
+/**
+ * 定位点处理,提供外部调用
+ * @param coordinate
+ * @return NULL 表示当前点被废弃
+ */
+- (LoactionPoint*) loctaion:(LoactionPoint*)coordinate
+{
+//    NSLog(@"---- %2f %2f %2f",coordinate.latitude,coordinate.longitude,coordinate.oldHorizontalAccuracy);
+    if (coordinate.latitude == 0.0 || coordinate.longitude == 0.0 || coordinate.oldHorizontalAccuracy == 0.0)
+    {
+        return nil;
+    }
+    if(oldLocation == nil)
+    {
+        SAFERELEASE(oldLocation)
+        oldLocation = [[LoactionPoint alloc] init];
+        oldLocation.longitude = coordinate.longitude;
+        oldLocation.latitude = coordinate.latitude;
+        oldLocation.altitude = coordinate.altitude;
+        oldLocation.oldHorizontalAccuracy = coordinate.oldHorizontalAccuracy;
+//        return oldLocation;
+    }
+    else
+    {
+        if([PublicUtils GetDistanceS:coordinate.longitude withlat1:coordinate.latitude withlng2:oldLocation.longitude withlat2:oldLocation.latitude] > MAX_DISTANCE)
+        {
+            LoactionPoint *tmpLp = [self regulationPoint:coordinate];
+            SAFERELEASE(oldLocation)
+            oldLocation = [[LoactionPoint alloc] init];
+            oldLocation.longitude = tmpLp.longitude;
+            oldLocation.latitude = tmpLp.latitude;
+            oldLocation.altitude = tmpLp.altitude;
+            oldLocation.oldHorizontalAccuracy = tmpLp.oldHorizontalAccuracy;
+//            return oldLocation;
+        }
+        else
+        {
+            [self cleanExceedPoints];
+            SAFERELEASE(oldLocation)
+            oldLocation = [[LoactionPoint alloc] init];
+            oldLocation.longitude = coordinate.longitude;
+            oldLocation.latitude = coordinate.latitude;
+            oldLocation.altitude = coordinate.altitude;
+            oldLocation.oldHorizontalAccuracy = coordinate.oldHorizontalAccuracy;
+//            return oldLocation;
+        }
+    }
+    return oldLocation;
+}
+/**
+ * 处理可疑点
+ * @param loctaion
+ * @return
+ */
+- (LoactionPoint*) regulationPoint:(LoactionPoint*) loctaion
+{
+    [self addPoint:loctaion withIndex:0];
+    int bestPointIndex = -1;
+    double minDistance = MAX_DISTANCE;
+    if(exceedPoints.count == MAX_EXCEED)
+    {
+        for(int i = 0 ; i < MAX_EXCEED ; i++)
+        {
+            int a = i;
+            if(++a < MAX_EXCEED)
+            {
+                LoactionPoint *pointF = [exceedPoints objectAtIndex:i];
+                LoactionPoint *pointS = [exceedPoints objectAtIndex:a];
+                if (pointF && pointS)
+                {
+                    double distance = [PublicUtils GetDistanceS:pointF.longitude withlat1:pointF.latitude withlng2:pointS.longitude withlat2:pointS.latitude];
+                    
+                    if(minDistance > distance)
+                    {
+                        minDistance = distance;
+                        bestPointIndex = a;
+                    }
+                }
+            }
+        }
+        
+        if(bestPointIndex != -1 && exceedPoints[bestPointIndex] != nil)
+        {
+            LoactionPoint *resLocation = [[[LoactionPoint alloc] init] autorelease];
+            LoactionPoint *p = exceedPoints[bestPointIndex];
+            resLocation.longitude = p.longitude;
+            resLocation.latitude = p.latitude;
+            resLocation.altitude = p.altitude;
+            resLocation.oldHorizontalAccuracy = p.oldHorizontalAccuracy;
+            [self cleanExceedPoints];
+            return resLocation;
+        }
+        [self cleanExceedPoints];
+        return nil;
+    }
+    return nil;
+}
+/**
+ * 添加可疑点
+ * @param loctaion
+ * @param index
+ */
+- (void)addPoint:(LoactionPoint*) loctaion withIndex:(int) index
+{
+    if (exceedPoints.count < MAX_EXCEED)
+    {
+        LoactionPoint *p = [[[LoactionPoint alloc] init] autorelease];
+        p.longitude = loctaion.longitude;
+        p.latitude = loctaion.latitude;
+        p.altitude = loctaion.altitude;
+        p.oldHorizontalAccuracy = loctaion.oldHorizontalAccuracy;
+        [exceedPoints addObject:loctaion];
+    }
+}
+/**
+ * 清空可疑点
+ */
+- (void) cleanExceedPoints
+{
+    [exceedPoints removeAllObjects];
+}
+
+- (void)dealloc
+{
+    SAFERELEASE(oldLocation)
+    SAFERELEASE(exceedPoints)
+    [super dealloc];
+}
+@end
+

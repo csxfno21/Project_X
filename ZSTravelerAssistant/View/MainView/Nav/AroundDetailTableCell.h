@@ -1,0 +1,45 @@
+//
+//  AroundDetailTableCell.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-13.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "AroundDetailCell.h"
+#import "RecomdLineCell.h"
+
+typedef enum
+{
+    COMMON_NAV_TYPE_LOCATION = 0,
+    COMMON_NAV_TYPE_HERE,
+}COMMON_NAV_TYPE;
+
+@protocol AroundDetailTableCellDelegate <NSObject>
+- (void)aroundTableViewCellAction:(COMMON_NAV_TYPE)menuType withIndex:(int)index;
+@end
+
+@interface AroundDetailTableCell : UITableViewCell
+{
+    UIImageView *typeImgView;
+    UILabel     *titleLabel;
+    UILabel     *disLabel;
+    UILabel     *contentLabel;
+    UILabel     *bottomLabel;
+    AroundDetailCell *cell1;
+    AroundDetailCell *cell2;
+    UIImageView *downUpArrowImgView;
+    id<AroundDetailTableCellDelegate> arounDelegate;
+}
+@property (nonatomic, assign)    id<AroundDetailTableCellDelegate> arounDelegate;
+@property (nonatomic, retain)    UIImageView *typeImgView;
+@property (nonatomic, retain)    UILabel     *titleLabel;
+@property (nonatomic, retain)    UILabel     *disLabel;
+@property (nonatomic, retain)    UILabel     *contentLabel;
+@property (nonatomic, retain)    UILabel     *bottomLabel;
+@property (nonatomic, retain)    AroundDetailCell *cell1;
+@property (nonatomic, retain)    AroundDetailCell *cell2;
+@property (nonatomic, retain)    UIImageView *downUpArrowImgView;
+@property(assign, nonatomic)BOOL bIsShow;
+@end

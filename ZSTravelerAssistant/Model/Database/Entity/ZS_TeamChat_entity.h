@@ -1,0 +1,24 @@
+//
+//  ZS_TeamChat_entity.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-11-11.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ZS_TeamChat_entity : NSObject
+{
+    int ID;
+    NSString *ChatCreator;
+    NSString *ChatCreatorID;
+    NSString *ChatName;
+    NSString *ChatNameID;
+}
+@property(nonatomic, assign) int ID;
+@property(nonatomic, retain) NSString *ChatCreator;
+@property(nonatomic, retain) NSString *ChatCreatorID;
+@property(nonatomic, retain) NSString *ChatName;
+@property(nonatomic, retain) NSString *ChatNameID;
+@end

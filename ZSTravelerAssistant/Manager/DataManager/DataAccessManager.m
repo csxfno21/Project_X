@@ -1,0 +1,413 @@
+//
+//  DataAccessManager.m
+//  Tourism
+//
+//  Created by csxfno21 on 13-7-10.
+//  Copyright (c) 2013年 csxfno21. All rights reserved.
+//
+
+#import "DataAccessManager.h"
+#import "FMDatabase.h"
+static DataAccessManager *_DAManager = nil;
+@implementation DataAccessManager
+
+- (DataAccessManager *)init
+{
+    if (self = [super init])
+    {
+        NSString *dbpath = [DataAccessManager dataFilePath];
+        [self createEditableDatabaseOfDataCacheStoreIfNeeded];
+        FMDatabase *db = [FMDatabase databaseWithPath:dbpath];
+        
+        if (![db open])
+        {
+            NSLog(@"Open database error!");
+            return self;
+        }
+        
+        [db setShouldCacheStatements:YES];
+        
+        tableVersion = [[ZS_TableVersion alloc] init];
+        recommendModel = [[ZS_RecommendModel alloc] init];
+        infoMationModel = [[ZS_InfomationModel alloc] init];
+        trafficModel = [[ZS_TrafficModel alloc] init];
+        spotRouteModel = [[ZS_SpotRouteModel alloc] init];
+        spotModel = [[ZS_SpotModel alloc] init];
+        commModel = [[ZS_CommonNavModel alloc] init];
+        speakModel = [[ZS_SpotSpeakModel alloc] init];
+        scenicModel = [[ZS_Scenic_Buffer_Model alloc] init];
+        teamChatModel = [[ZS_TeamChat_Model alloc] init];
+        groupChatModel = [[ZS_TeamGroupChat_Model alloc] init];
+        singleChatMode = [[ZS_TeamSingleChat_Model alloc] init];
+    }
+    
+    return self;
+}
+- (id)retain
+{
+    return self;
+}
+- (id)autorelease
+{
+    return self;
+}
+- (void)createEditableDatabaseOfDataCacheStoreIfNeeded
+{
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    NSString *datapath = K_DOCUMENT_FOLDER;
+    
+    BOOL isDir = NO;
+    BOOL existed = [fileManager fileExistsAtPath:datapath isDirectory:&isDir];
+    if (!(existed == YES && isDir == YES ))
+    {
+        [fileManager createDirectoryAtPath:datapath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+    
+    NSString *writablePlistPath = [datapath stringByAppendingPathComponent:FILES_DB];
+    
+    BOOL success = [fileManager fileExistsAtPath:writablePlistPath];
+    if (success)return;
+	// The writable plist does not exist, so copy the default to the appropriate location.
+	NSString *defaultPlistPath = [[NSBundle mainBundle] pathForResource:@"ZSTraveler" ofType:@"sqlite"];
+    //NSString *defaultPlistPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:kDatabaseName];
+	
+    NSError *error;
+    success = [fileManager copyItemAtPath:defaultPlistPath toPath:writablePlistPath error:&error];
+    if (!success)
+	{
+        NSAssert1(0, @"Failed to create writable image cache plist file with message '%@'.", [error localizedDescription]);
+    }
+}
++ (NSString *)dataFilePath
+{
+    NSString *filename = FILES_DB;
+	
+	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *datapath = [paths objectAtIndex:0];
+    NSString *path = [datapath stringByAppendingPathComponent:filename];
+    return path;
+}
+
++(DataAccessManager *)sharedDataModel
+{
+    if (!_DAManager)
+    {
+        _DAManager = [[DataAccessManager alloc] init];
+    }
+    return _DAManager;
+}
+
+
+#pragma mark - TableVersion
+- (NSArray *)getVersion
+{
+    return [tableVersion getVersion];
+}
+
+- (BOOL)updateTableVersion:(NSString*)tableName withVersion:(NSString*)version
+{
+    return [tableVersion updateTableVersion:tableName withVersion:version];
+}
+
+
+
+#pragma mark - recommend
+- (NSArray *)getAllRecommend
+{
+    return [recommendModel quaryAllRecommend];
+}
+
+- (BOOL)updateRecommend:(NSArray *)data
+{
+    return [recommendModel updateRecommend:data];
+}
+
+
+#pragma mark - infoMation
+- (NSArray*)getAllSeasonInfo
+{
+    return [infoMationModel quaryAllInfoByType:1];
+}
+- (NSArray*)getAllRecentlyInfo
+{
+    return [infoMationModel quaryAllInfoByType:2];
+}
+
+- (BOOL)updateInfo:(NSArray*)data
+{
+
+    return [infoMationModel updateInfo:data];
+}
+
+
+#pragma mark - traffic
+- (NSArray*)getAllBusInfo
+{
+    return [trafficModel getAllBusInfo];
+}
+- (NSArray*)getAllTourisCarInfo
+{
+    return [trafficModel getAllTourisCarInfo];
+}
+
+- (BOOL)updateTrafficInfo:(NSArray*)data
+{
+    return [trafficModel updateTrafficInfo:data];
+}
+
+
+#pragma mark - route
+- (NSArray *)getAllThemRoute
+{
+    return [spotRouteModel quaryRoute:1];
+}
+- (NSArray *)getAllCommonRoute
+{
+    return [spotRouteModel quaryRoute:2];
+}
+-(BOOL)updateRouteInfo:(NSArray *)data
+{
+    return [spotRouteModel updateSpotRoute:data];
+}
+
+
+#pragma mark - spot
+- (NSArray *)getAllSpot
+{
+    return [spotModel getAllSpot];
+}
+- (NSArray*)getViewSpot
+{
+    return [spotModel quarySpotByType:1];
+}
+- (NSArray *)getNViewSpot
+{
+    return [spotModel quarySpotByType:2];
+}
+- (id)getSpotByName:(NSString *)spotName
+{
+    return [spotModel getSpotByName:spotName];
+}
+- (id)getSpotBySpotID:(NSString *)spotID
+{
+    return [spotModel getSpotBySpotID:spotID];
+}
+- (BOOL)updateSpotInfo:(NSArray *)data
+{
+    return [spotModel updateSpot:data];
+}
+- (NSArray *)getSpotsDetailByIDs:(NSArray*)ids
+{
+    return [spotModel quarySpotsDetailByIDs:ids];
+}
+- (NSString*) getSpotBufferByID:(int)ID
+{
+    return [spotModel getSpotBufferByID:ID];
+}
+
+#pragma mark - poi
+
+- (NSArray*)getAllCommonNav
+{
+    return [commModel quaryAllCommonNav];
+}
+
+- (BOOL)updatePoiInfo:(NSArray *)data
+{
+    return [commModel updatePoiInfo:data];
+}
+
+- (NSArray*)getLocationPoi:(POI_TYPE)type,...
+{
+    SCENIC_TYPE scenic = [MapManager sharedInstanced].currentScenic;
+    NSMutableArray *argsArray = [[NSMutableArray alloc] init];
+    if(type)
+    {
+        [argsArray addObject:INTTOOBJ(type)];
+    }
+    va_list args;
+    va_start(args, type);
+    POI_TYPE arg;
+    while((arg = va_arg(args,POI_TYPE)))
+    {
+        [argsArray addObject:INTTOOBJ(arg)];
+    }
+    NSArray *result = [commModel quaryAllPoi:-1 withType:argsArray];
+    va_end(args);
+    
+    SAFERELEASE(argsArray)
+    if (scenic != SCENIC_OUT)
+    {
+        //如果当前点不在景区外,求附近3000米
+        NSMutableArray *resArray = [NSMutableArray array];
+        for (ZS_CommonNav_entity *entity in result)
+        {
+            if(entity.DisToPosition <= MAXAROUNDDISTANCE)
+            {
+                [resArray addObject:entity];
+            }
+        }
+        return resArray;
+    }
+    ///////
+    return result;
+}
+
+- (ZS_CommonNav_entity*)getPOI:(int)poiID
+{
+    return [commModel getPOI:poiID];
+}
+
+- (NSString*)getPOITypeByID:(int)poiID
+{
+    return [commModel getPOITypeByID:poiID];
+}
+
+- (NSArray*)getPOi:(int)spotID withPoiType:(POI_TYPE)type,...
+{
+    NSMutableArray *argsArray = [[NSMutableArray alloc] init];
+    if(type)
+    {
+        [argsArray addObject:INTTOOBJ(type)];
+    }
+    va_list args;
+    va_start(args, type);
+    POI_TYPE arg;
+    while((arg = va_arg(args,POI_TYPE)))
+    {
+        [argsArray addObject:INTTOOBJ(arg)];
+    }
+    NSArray *result = [commModel quaryAllPoi:spotID withType:argsArray];
+    va_end(args);
+    
+    SAFERELEASE(argsArray)
+    return result;
+}
+- (NSArray*)getPOIRelationInfo:(int)parnentID
+{
+    return [commModel getPOIRelationInfo:parnentID];
+}
+
+- (ZS_PoiRelation_entity*)getPOIRelationPoiID:(int)parkInID
+{
+    return [commModel getPOIRelationPoiID:parkInID];
+}
+- (BOOL)updatePOIRelationInfo:(NSArray*)data
+{
+    return [commModel updatePOIRelationInfo:data];
+}
+- (NSString*)getParkBufferByID:(int)ID
+{
+    return [commModel getParkBufferByID:ID];
+}
+
+#pragma mark - speak
+
+- (BOOL)updateSpeakInfo:(NSArray *)data
+{
+    return [speakModel updateSpeakInfo:data];
+}
+-(NSArray *)getAllSpotSpeak
+{
+    return [speakModel getAllSpotSpeak];
+}
+- (NSArray*)getSpotSpeakByType:(SCENIC_TYPE)type
+{
+    return [speakModel getSpotSpeakByType:type];
+}
+-(NSString *)getSpeakSpotContent:(int)SpotID
+{
+    return [speakModel getSpeakSpotContent:SpotID];
+}
+
+#pragma mark - scenic
+
+- (NSArray*)getSpeakContentByType:(SCENIC_TYPE)type
+{
+    return [scenicModel getSpeakContentByType:type];
+}
+- (ZS_Scenic_Buffer_entity*)getBufferByType:(SCENIC_TYPE)type
+{
+    return [scenicModel getBufferByType:type];
+}
+- (BOOL)updateScenicInfo:(NSArray*)data
+{
+    return [scenicModel updateScenicInfo:data];
+}
+
+- (BOOL)isScenic:(int)ID
+{
+    return [scenicModel isScenic:ID];
+}
+
+- (BOOL)isPark:(int)ID
+{
+    return [commModel isPark:ID];
+}
+
+#pragma mark- personalInfo
+-(NSArray*)quaryAllTeamChat
+{
+    return [teamChatModel quaryAllTeamChat];
+}
+-(ZS_TeamChat_entity *)quaryTeamChatByID:(int)ID
+{
+    return [teamChatModel quaryTeamChatByID:ID];
+}
+-(BOOL)updateTeamChat:(NSArray*)data
+{
+    return [teamChatModel updateTeamChat:data];
+}
+
+#pragma mark- groupChat
+-(NSArray*)quaryAllGroupChat
+{
+    return [groupChatModel quaryAllGroupChat];
+}
+-(ZS_TeamGroupChat_entity*)quaryGropuChatByID:(int)ID
+{
+    return [groupChatModel quaryGropuChatByID:ID];
+}
+-(BOOL)updateGroupChat:(NSArray *)data
+{
+    return [groupChatModel updateGroupChat:data];
+}
+
+#pragma mark- singleChat
+-(NSArray*)quaryAllSingleChat
+{
+    return [singleChatMode quaryAllSingleChat];
+}
+-(ZS_TeamSingleChat_entity*)quraySingleChatByID:(int)ID
+{
+    return [singleChatMode quraySingleChatByID:ID];
+}
+-(BOOL)updateSingleChat:(NSArray *)data
+{
+    return [singleChatMode updateSingleChat:data];
+}
+
+
++(void)releaseDataModel
+{
+    SAFERELEASE(_DAManager);
+}
+
+-(void)dealloc
+{
+    SAFERELEASE(commModel)
+    SAFERELEASE(infoMationModel)
+    SAFERELEASE(tableVersion)
+    SAFERELEASE(recommendModel)
+    SAFERELEASE(trafficModel)
+    SAFERELEASE(spotRouteModel)
+    SAFERELEASE(spotModel)
+    SAFERELEASE(speakModel)
+    SAFERELEASE(scenicModel)
+    SAFERELEASE(teamChatModel)
+    SAFERELEASE(groupChatModel)
+    SAFERELEASE(singleChatMode)
+	[super dealloc];
+}
+@end

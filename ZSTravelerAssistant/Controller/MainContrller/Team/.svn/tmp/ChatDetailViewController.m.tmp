@@ -1,0 +1,381 @@
+//
+//  ChatDetailViewController.m
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-10-30.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "ChatDetailViewController.h"
+#import "TTSPlayer.h"
+#import "TeamManager.h"
+
+@interface ChatDetailViewController ()
+
+@end
+
+@implementation ChatDetailViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    m_bottomView.delegate = self;
+    m_chatTableView.separatorStyle =UITableViewCellSeparatorStyleNone;//去掉cell边框线
+    m_chatTableView.backgroundColor = [UIColor clearColor];
+	m_chatTableView.separatorColor = [UIColor clearColor];
+    m_chatTableView.delegate = self;
+    m_chatTableView.dataSource = self;
+    m_chatTableView.showsVerticalScrollIndicator = NO;
+    self.data = [NSArray arrayWithObjects:@"你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好[拥抱]你好", nil];
+    if(self.receive && self.receive)
+    {
+        _Title.text = @"钟山旅游团";
+    }
+    else
+    {
+        _Title.text = @"队员小明";
+    }
+    
+    [[TeamManager sharedInstanced] registerTeamManagerNotification:self];
+    
+}
+- (IBAction)backAction:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+/*********************************************************************
+ 函数名称 : setToDisplayEmotionView
+ 函数描述 : 显示表情视图
+ 参数 N/A
+ 返回值 N/A
+ 作者 : yandaoqiu
+ *********************************************************************/
+- (void)setToDisplayEmotionViewCallBack
+{
+	[self setToDisplayEmotionViewInCtl];
+}
+
+- (void)setToDisplayEmotionViewInCtl
+{
+	
+	m_bottomView.m_EmotionShowFlag = YES;
+	m_bottomView.m_KeyBoardShowFlag = NO;
+	[m_bottomView.m_chatTextView resignFirstResponder];
+	[UIView beginAnimations:nil context:nil];
+	[UIView setAnimationDuration:0.2];
+	[UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+    NSInteger height = 105  + m_bottomView.m_chatTextView.frame.size.height + 10;
+    if(iPhone5)
+    {
+        m_bottomView.frame = CGRectMake(0, 415 - height + 88, 320, m_bottomView.frame.size.height);
+        m_chatTableView.frame = CGRectMake(0.0f, 44.0f, 320, self.view.frame.size.height - 44 - m_bottomView.m_ChatImageView.frame.size.height - m_bottomView.frame.size.height);
+        m_bottomView.m_dismissButton.frame = CGRectMake(0, 44, 320, self.view.frame.size.height - 44 - m_bottomView.m_ChatImageView.frame.size.height - m_bottomView.frame.size.height);
+
+        m_bottomView.m_ChatImageView.frame = CGRectMake(0.0f, 320 + 88, 320.0f, 140);
+    }
+    else
+    {
+        m_bottomView.frame = CGRectMake(0, 415 - height, 320, m_bottomView.frame.size.height);
+        m_chatTableView.frame = CGRectMake(0.0f, 44.0f, 320, self.view.frame.size.height - 44 - m_bottomView.m_ChatImageView.frame.size.height - 26 - m_bottomView.m_chatTextView.frame.size.height);
+        m_bottomView.m_dismissButton.frame = CGRectMake(0, 44, 320, self.view.frame.size.height - 44 - m_bottomView.m_ChatImageView.frame.size.height - 26 - m_bottomView.m_chatTextView.frame.size.height);
+        m_bottomView.m_ChatImageView.frame = CGRectMake(0.0f, 320, 320.0f, 140);
+    }
+    [self.view addSubview:m_bottomView.m_ChatImageView];
+    [self.view addSubview:m_bottomView.m_dismissButton];
+	[UIView commitAnimations];
+}
+/*********************************************************************
+ 函数名称 : setToDissmissEmotionView
+ 函数描述 : 隐藏表情视图
+ 参数 N/A
+ 返回值 N/A
+ 作者 : yandaoqiu
+ *********************************************************************/
+- (void)setToDissmissEmotionViewCallBack
+{
+	m_bottomView.m_KeyBoardShowFlag = NO;
+	m_bottomView.m_EmotionShowFlag = NO;
+	[UIView beginAnimations:nil context:nil];
+	[UIView setAnimationDuration:0.2];
+	[UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
+    float changeH = m_bottomView.frame.size.height - 60;
+    // 加上 放大的高度
+    if (iPhone5)
+    {
+        m_chatTableView.frame = CGRectMake(0.0, 44.0f, 320, self.view.frame.size.height - 44 - m_bottomView.frame.size.height);
+        m_bottomView.frame = CGRectMake(0, 400+88 - changeH, 320, m_bottomView.frame.size.height);
+        m_bottomView.m_ChatImageView.frame = CGRectMake(0, 480 + 88, 320, 105);
+        m_bottomView.m_dismissButton.frame = CGRectMake(0, 480 + 88, 320, 0);
+    }
+    else
+    {
+    	m_chatTableView.frame = CGRectMake(0.0, 44.0f, 320, self.view.frame.size.height - 44 - m_bottomView.frame.size.height);
+        m_bottomView.frame = CGRectMake(0, 400 - changeH , 320, m_bottomView.frame.size.height);
+        m_bottomView.m_ChatImageView.frame = CGRectMake(0, 480, 320, 105);
+        m_bottomView.m_dismissButton.frame = CGRectMake(0, 480, 320, 0);
+    }
+
+	[m_bottomView.m_chatTextView resignFirstResponder];
+	
+	[UIView commitAnimations];
+}
+
+
+-(void)textViewChanged:(float)height
+{
+    
+    [UIView beginAnimations:nil context:nil];
+	[UIView setAnimationDuration:0.3];
+	[UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+    if(m_bottomView.m_dismissButton.superview == self.view)[m_bottomView.m_dismissButton removeFromSuperview];
+    [self.view addSubview:m_bottomView.m_dismissButton];
+    
+	if(m_bottomView.m_KeyBoardShowFlag)
+    {
+        //键盘 抬起
+//        NSInteger height = m_bottomView.frame.origin.y;
+        m_bottomView.m_dismissButton.frame = CGRectMake(0, 44, 320, m_bottomView.m_dismissButton.frame.size.height - height);
+        if(iPhone5)
+        {
+            m_bottomView.m_ChatImageView.frame = CGRectMake(0, 480 + 88, 320, 105);
+        }
+        else
+        {
+            m_bottomView.m_ChatImageView.frame = CGRectMake(0, 480, 320, 105);
+        }
+        m_chatTableView.frame = CGRectMake(0.0f, 44.0f, 320, m_chatTableView.frame.size.height - height);
+    }
+    else if (m_bottomView.m_EmotionShowFlag)
+    {
+        //表情符号
+        m_bottomView.m_dismissButton.frame = CGRectMake(0, 44, 320, m_bottomView.m_dismissButton.frame.size.height - height);
+        m_chatTableView.frame = CGRectMake(0.0f, 44.0f, 320, m_chatTableView.frame.size.height - height);
+    }
+    [UIView commitAnimations];
+    
+}
+- (void)keyboardWillShowCallBack:(float)height
+{
+    [UIView beginAnimations:nil context:nil];
+	[UIView setAnimationDuration:0.3];
+	[UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+	if(m_bottomView.m_dismissButton.superview == self.view)[m_bottomView.m_dismissButton removeFromSuperview];
+	[self.view addSubview:m_bottomView.m_dismissButton];
+
+    NSInteger h = self.view.frame.size.height - height - m_bottomView.frame.size.height - 44;
+    m_bottomView.m_dismissButton.frame = CGRectMake(0, 44, 320, h);
+    if (iPhone5)
+    {
+        m_bottomView.m_ChatImageView.frame = CGRectMake(0, 480 + 88, 320, 105);
+    }
+    else
+    {
+        m_bottomView.m_ChatImageView.frame = CGRectMake(0, 480, 320, 105);
+    }
+    m_bottomView.frame = CGRectMake(0.0f, h+44,320, 26 + m_bottomView.m_chatTextView.frame.size.height);
+    m_bottomView.m_bottomImage.frame = CGRectMake(0, 0, 320, m_bottomView.frame.size.height);
+    
+    m_chatTableView.frame = CGRectMake(0.0f, 44.0f, 320, h);
+	[UIView commitAnimations];
+    
+}
+#pragma mark - 发送消息
+- (void)sendMessage:(NSString *)msgContent
+{
+    //TODO send request
+    if(self.receive && self.receive.userType == TEAM_USER_TEAM)//接收者 为团队
+    {
+        [[TeamManager sharedInstanced] teamRequestSendGroupMessage:msgContent];
+    }
+    else if(self.receive && self.receive.userType == TEAM_USER_RECEIVE)//接收者 为个人
+    {
+        [[TeamManager sharedInstanced] teamRequestSendMessage:msgContent toWho:self.receive];
+    }
+    
+    [UIView beginAnimations:nil context:nil];
+	[UIView setAnimationDuration:0.3];
+	[UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+    float changeH = m_bottomView.m_chatTextView.frame.size.height - 34;
+    m_bottomView.m_chatTextView.text = @"";
+    m_bottomView.m_chatTextView.frame = CGRectMake(m_bottomView.m_chatTextView.frame.origin.x, m_bottomView.m_chatTextView.frame.origin.y,
+                                                   m_bottomView.m_chatTextView.frame.size.width, 34);
+    m_bottomView.m_sendButton.frame = CGRectMake(244, 12, 64, 34);
+    m_bottomView.m_expressionButton.frame = CGRectMake(6, 15, 30, 30);
+    m_bottomView.frame = CGRectMake(0, m_bottomView.frame.origin.y + changeH, 320, m_bottomView.frame.size.height - changeH);
+    m_bottomView.m_dismissButton.frame = CGRectMake(0, 44, 320, m_bottomView.m_dismissButton.frame.size.height + changeH);
+    m_chatTableView.frame = m_bottomView.m_dismissButton.frame;
+    [UIView commitAnimations];
+}
+
+#pragma mark- tableview
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (self.data.count == 0)
+    {
+        m_chatTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    else
+    {
+        m_chatTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    return self.data.count;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *identifier = @"cell";
+    //测试OthersChatCell类
+    //    OthersChatCell *othersChatCell = [tableView dequeueReusableCellWithIdentifier:identifier];
+    //    if (othersChatCell == nil)
+    //    {
+    //        othersChatCell = [[[OthersChatCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+    //    }
+    //    othersChatCell.selectionStyle = UITableViewCellSelectionStyleNone;
+    //    othersChatCell.isSingleChat = self.isSingleChat;
+    //    [othersChatCell setHeadImage:@"topbar-bg.png"];
+    //    [othersChatCell setChatPeopleText:@"严总"];
+    //    [othersChatCell setChatContentText:[self.data objectAtIndex:indexPath.row]];
+    //    return othersChatCell;
+    
+    //测试MyselfChatCell类
+    MyselfChatCell *mySelfChatcell = [tableView dequeueReusableCellWithIdentifier:identifier];
+    if (mySelfChatcell == nil)
+    {
+        mySelfChatcell = [[[MyselfChatCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+    }
+    mySelfChatcell.selectionStyle = UITableViewCellSelectionStyleNone;
+    [mySelfChatcell setHeadImage:@"topbar-bg.png"];
+    [mySelfChatcell setChatContentText:[self.data objectAtIndex:indexPath.row]];
+    
+    return mySelfChatcell;
+    
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *str = [self.data objectAtIndex:indexPath.row];
+    return [HTEmotionView sizeWithMessage:str].height;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 20.0f;
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 20)] autorelease];
+    UILabel *tmpLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 5, 320, 15)];
+    tmpLabel.backgroundColor = [UIColor whiteColor];
+    tmpLabel.font = [UIFont systemFontOfSize:12.0f];
+    tmpLabel.textAlignment = NSTextAlignmentCenter;
+    tmpLabel.backgroundColor = [UIColor clearColor];
+    tmpLabel.textColor = [UIColor lightGrayColor];
+    self.showTimeView = tmpLabel;
+    NSDate *senddate = [NSDate date];
+    [self setShowTimeText:senddate];
+    [view addSubview:tmpLabel];
+    view.backgroundColor = [UIColor whiteColor];
+    SAFERELEASE(tmpLabel)
+
+    m_chatTableView.tableHeaderView = view;
+    return m_chatTableView.tableHeaderView;
+}
+-(void)setShowTimeText:(NSDate *)time
+{
+    //根据字符串获取时间  并与当前时间比较   -----刚刚  1分钟前  5分钟前
+    NSDate *senddate = [NSDate date];
+    NSDateFormatter *dateformatterSys = [[NSDateFormatter alloc] init];
+    [dateformatterSys setDateFormat:@"YYYY-MM-dd-HH-mm-ss"];
+    NSString *sysString = [dateformatterSys stringFromDate:senddate];
+    
+    NSDateFormatter *dateformatterTime = [[NSDateFormatter alloc] init];
+    [dateformatterTime setDateFormat:@"YYYY-MM-dd-HH-mm-ss"];
+    NSString *timeString = [dateformatterTime stringFromDate:time];
+    
+    //UI显示的时间格式
+    NSDateFormatter *dateformatrerShowTime = [[NSDateFormatter alloc] init];
+    [dateformatrerShowTime setDateFormat:@"HH:mm"];
+    NSString *showTime = [dateformatrerShowTime stringFromDate:time];
+    
+    //截取前14位--HH
+    NSString *subSysString = [sysString substringToIndex:14];
+    NSString *subTimeString = [timeString substringToIndex:14];
+    //截取 14-15字符串  取分钟进行比较
+    NSString *subSysmmString = [sysString substringWithRange:NSMakeRange(14, 2)];
+    NSString *subTimemmString = [timeString substringWithRange:NSMakeRange(14, 2)];
+    int subSysmm = [subSysmmString intValue];
+    int subTimemm = [subTimemmString intValue];
+    
+    if (![subSysString isEqualToString:subTimeString])
+    {
+        return;
+    }
+    else if (subSysmm - subTimemm <= 1)
+    {
+        self.showTimeView.text = @"刚刚";
+    }
+    else if (subSysmm - subTimemm >1 && subSysmm - subTimemm <= 5)
+    {
+        self.showTimeView.text = @"1分钟前";
+    }
+    else if(subSysmm - subTimemm > 5 && subSysmm - subTimemm < 10)
+    {
+        self.showTimeView.text = @"5分钟前";
+    }
+    else
+    {
+        self.showTimeView.text = showTime;
+    }  
+}
+
+// 接收发送消息是否成功的状态
+- (void)receiveSendMsgStatus:(NSString*)isFaild
+{
+    if ([isFaild intValue] == REQUEST_ERRORCODE_FAIL)
+    {
+        NSString *result = @"接收发送消息状态失败";
+        [[TTSPlayer shareInstance] play:result playMode:TTS_DEFAULT];
+    }
+}
+//请求失败
+- (void)receiveRequestFailed
+{
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)dealloc {
+    [[TeamManager sharedInstanced] unRegisterTeamMapManagerNotification:self];
+    [_Title release];
+    [m_bottomView release];
+    [m_chatTableView release];
+    [super dealloc];
+}
+- (void)viewDidUnload {
+    [_Title release];
+    _Title = nil;
+    [m_bottomView release];
+    m_bottomView = nil;
+    [m_chatTableView release];
+    m_chatTableView = nil;
+    [super viewDidUnload];
+}
+@end

@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP
+END
+HttpBaseResponse.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpBaseResponse.h
+END
+ASIUtil.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/ASIUtil.h
+END
+HttpManagerCenter.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpManagerCenter.h
+END
+HttpRequest.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpRequest.m
+END
+HttpBaseResponse.m
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpBaseResponse.m
+END
+HttpResponse.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpResponse.h
+END
+ASIUtil.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/ASIUtil.m
+END
+MsgConstant.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/MsgConstant.h
+END
+HttpResponse.m
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpResponse.m
+END
+HttpRequest.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/Engine/HTTP/HttpRequest.h
+END

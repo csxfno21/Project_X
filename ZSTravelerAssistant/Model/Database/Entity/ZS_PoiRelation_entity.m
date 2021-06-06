@@ -1,0 +1,32 @@
+//
+//  ZS_PoiRelation_entity.m
+//  ZSTravelerAssistant
+//
+//  Created by csxfno21 on 13-9-24.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "ZS_PoiRelation_entity.h"
+
+@implementation ZS_PoiRelation_entity
+@synthesize  ID;
+@synthesize  PoiID;
+@synthesize  ParentID;
+@synthesize  POITitle;
+@synthesize  POIType;
+@synthesize  POILng;
+@synthesize  POILat;
+@synthesize  POIBuffer;
+
+- (void)dealloc
+{
+    SAFERELEASE(PoiID)
+    SAFERELEASE(ParentID)
+    SAFERELEASE(POITitle)
+    SAFERELEASE(POIType)
+    SAFERELEASE(POILat)
+    SAFERELEASE(POILng)
+    SAFERELEASE(POIBuffer)
+    [super dealloc];
+}
+@end

@@ -1,0 +1,30 @@
+//
+//  ZS_Traffic_entity.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-7-26.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ZS_Traffic_entity : NSObject
+{
+    int ID;
+    NSString  *TrafficName;
+    NSString  *TrafficStartTime;
+    NSString  *TrafficEndTime;
+    NSString  *TrafficDetail;
+    NSString  *TrafficRemark;
+    NSString  *TrafficPrice;
+    NSString  *TrafficType;
+}
+@property (nonatomic, assign) int ID;
+@property (nonatomic, retain) NSString *TrafficName;
+@property (nonatomic, retain) NSString *TrafficStartTime;
+@property (nonatomic, retain) NSString *TrafficEndTime;
+@property (nonatomic, retain) NSString *TrafficDetail;
+@property (nonatomic, retain) NSString *TrafficRemark;
+@property (nonatomic, retain) NSString *TrafficPrice;
+@property (nonatomic, retain) NSString *TrafficType;
+@end

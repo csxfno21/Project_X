@@ -1,0 +1,27 @@
+//
+//  ChatDetailViewController.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-10-30.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "BaseViewController.h"
+#import "ChatDetailBottomView.h"
+#import "OthersChatCell.h"
+#import "MyselfChatCell.h"
+#import "TeamUser.h"
+#import "TeamManager.h"
+#import "TeamManagerDelegate.h"
+
+@interface ChatDetailViewController : BaseViewController<ChatDetailBottomViewDelegate,UITableViewDataSource,UITableViewDelegate,TeamManagerDelegate>
+{
+    IBOutlet UILabel *_Title;
+
+    IBOutlet ChatDetailBottomView *m_bottomView;
+    IBOutlet UITableView *m_chatTableView;
+    NSArray *messageData;
+}
+@property (retain, nonatomic) UILabel *showTimeView;
+@property (retain, nonatomic) TeamUser *receive;  //接受人
+@end

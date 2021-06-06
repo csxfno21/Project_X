@@ -1,0 +1,219 @@
+//
+//  TeamFriendTableView.m
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-8-22.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+#import "TeamFriendTableView.h"
+
+#define CELLHIGHT 70
+#define CELLHIGHTSHOWN 110
+
+@implementation TeamFriendTableView
+@synthesize teamDelegate;
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        selectIndex = -1;
+        
+        self.dataSource = self;
+        self.delegate = self;
+//        self.separatorColor = [UIColor clearColor];
+//        self.showsHorizontalScrollIndicator = NO;
+//        self.showsVerticalScrollIndicator = NO;
+        
+        loadingView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        loadingView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+        [self addSubview:loadingView];
+//        if(self.data == nil || self.data.count == 0)
+//        [loadingView startAnimating];
+    }
+    return self;
+}
+- (void)setData:(NSMutableArray *)data
+{
+    SAFERELEASE(_data)
+    _data = [data retain];
+    if(_data && _data.count > 0)
+    {
+       [self reloadData];
+    }
+    else
+    {
+        [loadingView stopAnimating];
+    }
+}
+
+#pragma mark- tableview delegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (selectIndex == indexPath.row)
+    {
+        return CELLHIGHTSHOWN;
+    }
+    else
+    {
+        return CELLHIGHT;
+    }
+}
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    int number = _data.count;
+    if (number == 0)
+    {
+        tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }else
+    {
+        tableView.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+    }
+    return number;
+}
+//- (void)setLoadingViewFram
+//{
+//    if (selectIndex != -1)
+//    {
+//        [refreshFooterView setFrame:CGRectMake(0, _data.count * CELLHIGHT + CELLHIGHTSHOWN - CELLHIGHT, 320, REFRESH_HEADER_HEIGHT)];
+//    }
+//    else
+//    {
+//        [refreshFooterView setFrame:CGRectMake(0, _data.count * CELLHIGHT , 320, REFRESH_HEADER_HEIGHT)];
+//    }
+//}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    TeamChatCell *cell = (TeamChatCell *)[tableView cellForRowAtIndexPath:indexPath];
+    if(selectIndex == indexPath.row)
+    {
+        cell.bIsShow = !cell.bIsShow;
+        if(!cell.bIsShow)
+        {
+            selectIndex = -1;
+        }
+    }
+    else
+    {
+        if(selectIndex != -1)
+        {
+            TeamChatCell *lastOpenCell = (TeamChatCell *)[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:selectIndex inSection:0]];
+            if(lastOpenCell.bIsShow)
+            {
+                lastOpenCell.bIsShow = NO;
+            }
+        }
+        cell.bIsShow = YES;
+        selectIndex = indexPath.row;
+    }
+    CGRect cellRect = [self rectForRowAtIndexPath:indexPath];
+    if (cellRect.origin.y - self.contentOffset.y + CELLHIGHTSHOWN > self.frame.size.height)
+    {
+        float needScrolOffset = CELLHIGHTSHOWN - (self.frame.size.height - cellRect.origin.y + self.contentOffset.y);
+        [self setContentOffset:CGPointMake(0, needScrolOffset + self.contentOffset.y) animated:YES];
+    }
+    
+    [tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationNone];
+//    [self setLoadingViewFram];
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *identifier = @"cell";
+    TeamChatCell *teamCell = [tableView dequeueReusableCellWithIdentifier:identifier];
+    if (teamCell == nil)
+    {
+        teamCell = [[[TeamChatCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+        teamCell.selectionStyle = UITableViewCellSelectionStyleNone;
+
+    }
+    if(indexPath.row == selectIndex)
+    {
+        teamCell.bIsShow = YES;
+    }
+    else
+    {
+        teamCell.bIsShow = NO;
+    }
+    teamCell.delegate = self;
+    teamCell.tag = indexPath.row;
+    TeamMatesInfo_entity* entity = [_data objectAtIndex:indexPath.row];
+    teamCell.nameLabel.text = entity.nickName;
+    NSString *isState = @"";
+    if ([entity.state intValue] == REQUEST_ONLINESTATE_ERRORCODE_OFFLINE)
+    {
+        isState = [Language stringWithName:OFFLINE];
+    }
+    else if ([entity.state intValue] == REQUEST_ONLINESTATE_ERRORCODE_NORMAL)
+    {
+        isState = [Language stringWithName:ONLINE];
+    }
+    else
+    {
+        isState = [Language stringWithName:BUSY];
+    }
+    if([@"0" isEqualToString:entity.sex])
+    {
+        teamCell.headImgView.image = [UIImage imageNamed:@"team-sex-boy.png"];
+    }
+    else if ([@"1" isEqualToString:entity.sex])
+    {
+        teamCell.headImgView.image = [UIImage imageNamed:@"team-sex-girl.png"];
+    }
+    teamCell.stateOnlineLabel.text = isState;
+    if ([entity.longitude doubleValue] == 0.0 || [entity.latitude doubleValue] == 0.0)
+    {
+        teamCell.disValueLabel.text = [Language stringWithName:DIS_UNKNOWN];
+        teamCell.disValueLabel.frame = CGRectMake(110, 45, 80, 15);
+        teamCell.disUnitLabel.frame = CGRectMake(190, 45, 40, 15);
+        teamCell.disUnitLabel.hidden = YES;
+    }
+    else
+    {
+        double dis = [PublicUtils GetDistanceS:[MapManager sharedInstanced].oldLocation2D.longitude withlat1:[MapManager sharedInstanced].oldLocation2D.latitude withlng2:[entity.longitude doubleValue] withlat2:[entity.latitude doubleValue]];
+//        teamCell.disValueLabel.text = [NSString stringWithFormat:@"%.2f",dis];
+//        teamCell.disValueLabel.frame = CGRectMake(110, 45, 40, 15);
+//        teamCell.disValueLabel.frame = CGRectMake(150, 45, 40, 15);
+        teamCell.disUnitLabel.hidden = NO;
+        if (dis > 1000)
+        {
+            dis = dis/1000;
+            teamCell.disUnitLabel.text = [Language stringWithName:KM];
+            teamCell.disValueLabel.frame = CGRectMake(110, 45, 40, 15);
+            teamCell.disUnitLabel.frame = CGRectMake(150, 45, 40, 15);
+            teamCell.disValueLabel.text = [NSString stringWithFormat:@"%.2f",dis];
+        }
+        else
+        {
+            teamCell.disUnitLabel.text = [Language stringWithName:METER];
+            teamCell.disValueLabel.frame = CGRectMake(110, 45, 40, 15);
+            teamCell.disUnitLabel.frame = CGRectMake(150, 45, 40, 15);
+            teamCell.disValueLabel.text = [NSString stringWithFormat:@"%.2f",dis];
+        }
+    }
+    return teamCell;
+}
+
+#pragma mark- teamfriendtableview delegate
+-(void)teamChatMessageAction:(int)index withType:(TEAM_ACTION_TYPE)type
+{
+    if (teamDelegate && [teamDelegate respondsToSelector:@selector(teamFriendItemDidSelected:withType:withTeamUser:)])
+    {
+        TeamMatesInfo_entity *entity = [[[TeamMatesInfo_entity alloc] init] autorelease];
+        entity = [self.data objectAtIndex:index];
+        if ([entity.ID isEqualToString:@"-1"])
+        {
+            return;
+        }
+        TeamUser *teamUser = [[[TeamUser alloc] init] autorelease];
+        teamUser.userID = entity.ID;
+        teamUser.userName = entity.nickName;
+        teamUser.userType = TEAM_USER_RECEIVE;
+        [teamDelegate teamFriendItemDidSelected:index withType:type withTeamUser:teamUser];
+    }
+}
+
+
+@end

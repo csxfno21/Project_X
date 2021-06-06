@@ -1,0 +1,34 @@
+//
+//  LoadingTableView.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-8-15.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#define REFRESH_HEADER_HEIGHT 52.0f
+@interface LoadingTableView : UITableView
+{
+    UIView *refreshFooterView;
+    UILabel *refreshLabel;
+    UIImageView *refreshArrow;
+    UIActivityIndicatorView *refreshSpinner;
+    BOOL isDragging;
+    BOOL isLoading;
+    NSString *textPull;
+    NSString *textRelease;
+    NSString *textLoading;
+    NSString *textNoMore;
+}
+@property (nonatomic, strong) UIView *refreshFooterView;
+@property (nonatomic, strong) UILabel *refreshLabel;
+@property (nonatomic, strong) UIImageView *refreshArrow;
+@property (nonatomic, strong) UIActivityIndicatorView *refreshSpinner;
+@property (nonatomic) BOOL hasMore;
+- (void)setupStrings;
+- (void)startLoading;
+- (void)stopLoading;
+- (void)refresh;
+-(void)addPullToRefreshFooter;
+@end

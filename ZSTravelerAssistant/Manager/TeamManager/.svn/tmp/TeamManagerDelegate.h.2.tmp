@@ -1,0 +1,116 @@
+//
+//  TeamManagerDelegate.h
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-10-27.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#ifndef ZSTravelerAssistant_TeamManagerDelegate_h
+#define ZSTravelerAssistant_TeamManagerDelegate_h
+/**
+ *  监听 具体的业务回馈接口
+ *
+ */
+@protocol TeamManagerDelegate <NSObject>
+- (void)receiveRequestFailed;
+@optional
+// 登录 回调 errorCode:错误
+- (void)receivedLoginAction:(id)errorCode;
+// 登出 
+- (void)receivedLogoutAction:(id)errorCode;
+// 掉线
+- (void)receivedDroppedAction:(id)errorCode;
+// 接收到消息  单人消息/群组消息 从返回码中区别 
+- (void)receivedTeamMessageAction:(id)response;
+// 接收到报警回复
+- (void)receivedEmergencyAction:(id)response;
+// 接收到所有在线团队
+- (void)receivedAllOnlineTeam:(id)response;
+// 接收到所有队员状态
+- (void)receivedAllMemberState:(id)response;
+// 连接套接字错误
+- (void)receivedConnectError:(SOCKET_ERR_CODE)erroCode;
+
+// 接收景区公告
+- (void)receivedMsgFromScenic:(NSString*)msg withTime:(NSString*)time;
+// 接收队伍内成员资料
+- (void)receivedMembersInfo:(id)response;
+// 接收新建团队结果
+- (void)receivedCreateTeamResult:(NSString*)isSuccess;
+// 接收加入团队结果
+- (void)receivedJoinToTeamResult:(NSString*)isSuccess withList:(NSArray*)list;
+// 接收团队内消息
+- (void)receivedMsgFromTeam:(NSString*)deviceID withContent:(NSString*)content withTime:(NSString*)time;
+// 接收单个队友消息
+- (void)receivedMsgFromTeammat:(NSString*)deviceID withContent:(NSString*)content withTime:(NSString*)time;
+// 接收退出团队结果
+- (void)receiveQuitTeamResult:(NSString*)isSuccess;
+// 接收解散团队结果
+- (void)receiveDismisTeamResult:(NSString*)isSuccess;
+// 接收团队成员资料
+- (void)receiveTeammatInfo:(NSMutableArray*)infoList;
+// 接收团队列表
+- (void)receiveTeamList:(NSMutableArray*)teamList;
+// 接收队友位置信息
+- (void)receiveTeammatePosition:(NSString*)id lon:(NSString*)lon lat:(NSString*)lat;
+// 接收队友属性信息
+- (void)receiveTeammatesStatus:(NSMutableArray*)infoList;
+// 接收刷新队友信息是否成功
+- (void)receiveRefreshInfoStatus:(NSString*)isFaild;
+// 接收发送消息是否成功的状态
+- (void)receiveSendMsgStatus:(NSString*)isFaild MsgType:(NSString*)type;
+// 接收心跳检测结果
+- (void)receiveHeartTestMsg:(NSString*)returnCode;
+// 接收登录验证结果
+- (void)receiveLoginResult:(NSString*)result;
+// 接收修改信息后返回值
+- (void)receiveModifiInfo:(NSString*)name sex:(NSString*)sex where:(NSString*)where;
+@end
+
+
+/**
+ *  业务层 需要 实现的 对外提供的接口
+ *
+ */
+@protocol TeamManagerInterface <NSObject>
+
+//// 登录  userName:登录名   pwd:登录密码 
+//- (void)teamRequestLogin:(NSString*)userName withPwd:(NSString*)pwd;
+//// 登出
+//- (void)teamRequestLogout;
+// 修改个人信息
+- (void)teamRequestModifyInfo:(NSString*) alis withSex:(NSString*)sex withWhere:(NSString*) where;
+// 创建团队
+- (void)teamrequestCreateTeam:(NSString*)teamName withPsw:(NSString*) teamPsw;
+// 加入团队
+- (void)teamRequestAddToTeam:(NSString*) teamName withPsw:(NSString*) teamPsw;
+// 发文本消息  msg:发送的消息  who:发给谁
+- (void)teamRequestSendMessage:(NSString*)msg toWho:(id)who;
+// 发送群组消息 msg 发送到群组的消息
+- (void)teamRequestSendGroupMessage:(NSString*)msg;
+// 发送报警消息到信息中心 location:报警的内容 (看接口) type:报警的类别
+- (void)teamRequestSendEmergency:(CLLocationCoordinate2D)location toType:(int)type;
+// 获取当前所有的在线团队
+- (void)teamRequestQueryOnLineTeam;
+//// 目前 服务器 机制错误 ----> 需要主动刷新 队友的状态
+//- (void)teamRequestRefreshMemberState;
+//获取当前团队的所有团员
+- (void)teamRequestTeamMembers;
+// 上传头像
+- (void)teamRequestPushHeadIcon:(id)icon;
+// 下载头像
+- (void)teamRequestDownloadHeadIcon:(id)request;
+// 请求团队列表
+- (void)teamRequestQueryAllTeam:(REQUEST_TEAMLIST_TYPE)type lastID:(int)id;
+// 请求退出团队
+- (void)teamRequestQuitTeam;
+// 请求发送位置请求
+- (void)teamRequestLocation:(CLLocationCoordinate2D)location withSpeed:(double)speed withAltitude:(double)altitude withTime:(NSString*)time;
+
+
+@optional
+// 发送 数据 (服务器暂不支持)
+- (void)sendData:(NSData*)data toWho:(id)who;
+@end
+#endif

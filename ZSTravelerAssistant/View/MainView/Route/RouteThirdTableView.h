@@ -1,0 +1,43 @@
+//
+//  RouteThirdTableView.h
+//  ZSTravelerAssistant
+//
+//  Created by 梁谢超 on 13-7-27.
+//  Copyright (c) 2013年 company. All rights reserved.
+//
+
+typedef enum
+{
+    SPOT_VIEW_DEFAULT = 0,
+    SPOT_VIEW_CHOOSE ,
+    
+}SPOT_VIEW_TYPE;
+
+#import <UIKit/UIKit.h>
+#import "LoadingTableView.h"
+#import "RouteThirdTableViewCell.h"
+
+@protocol RouteThirdTableViewDlegate <NSObject>
+- (void)routeThirdItemDidSelected:(int) index withType:(ROUTE_MENU_TYPE)type;
+@optional
+- (void)routeThirdItemAddSpot:(ZS_CustomizedSpot_entity*)entity withIndex:(int)index;
+- (void)routeThirdItemDeleteSpot:(ZS_CustomizedSpot_entity*)entity withIndex:(int)index;
+@end
+
+@interface RouteThirdTableView : UITableView<UITableViewDataSource,UITableViewDelegate,RouteThirdTableViewCellDelegate,HttpManagerDelegate>
+{
+    id<RouteThirdTableViewDlegate> routeDelegate;
+    NSInteger openIndex;
+    int lastDataCount;
+    UIActivityIndicatorView *loadingView;
+    
+     NSMutableDictionary *selectedSpot;
+    
+
+    int   addAnimIndex;
+
+}
+@property(assign,nonatomic)SPOT_VIEW_TYPE type;
+@property(retain,nonatomic)NSArray *data;
+@property(assign,nonatomic)id<RouteThirdTableViewDlegate> routeDelegate;
+@end

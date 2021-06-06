@@ -1,0 +1,27 @@
+//
+//  OthersChatCell.h
+//  ZSTravelerAssistant
+//
+//  Created by szmap on 13-11-4.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "HTEmotionView.h"
+
+@interface OthersChatCell : UITableViewCell
+{
+    
+}
+@property (retain ,nonatomic) UIImageView *headImgView;
+@property (retain ,nonatomic) UIImageView *chatBackgroundImgView;
+@property (retain ,nonatomic) HTEmotionView     *chatContentLabel;
+@property (retain ,nonatomic) UIImageView *chatContentImgView;
+@property (retain ,nonatomic) UILabel     *chatPeopleLabel;
+@property (nonatomic, assign) BOOL        isSingleChat;
+
+-(void)setHeadImage:(NSString *)image;
+-(void)setChatContentText:(NSString *)chatContent;
+-(void)setChatContentImage:(NSString *)chatContentImage;
+-(void)setChatPeopleText:(NSString *)chatPeople;
+@end

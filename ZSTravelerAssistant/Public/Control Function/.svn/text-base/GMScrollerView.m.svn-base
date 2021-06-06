@@ -1,0 +1,242 @@
+//
+//  GMScrollerView.m
+//  GMScrollerView
+//
+//  Created by 严道秋 on 13-8-1.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+
+#import "GMScrollerView.h"
+
+@interface GMScrollerView(private)
+
+- (int)pointNeedDraw:(int)count;
+
+@end
+#define MAX_POINT_COUNT          4    //最大点数
+#define POINTY_LIGHTVIEW         55   //浅蓝色线 y
+#define HIGHT_LIGHTVIEW          2    //浅蓝色线 高度
+#define HIGHT_DEFAULT_POINT      10 *0.8  //默认点   高度
+#define WIDTH_SELECTED_POINT     120 *0.8  //选中点   宽度
+#define HIGHT_SELECTED_POINT     29 *0.8  //选中点   高度
+#define TITLE_FONT               [UIFont systemFontOfSize:16]
+
+#define TITLE_TAG                100
+@implementation GMScrollerView
+@synthesize delegate;
+@synthesize selectedIndex;
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        UIView *lightView = [[UIView alloc] initWithFrame:CGRectMake(0, POINTY_LIGHTVIEW, 320, 2)];
+        lightView.backgroundColor = [UIColor colorWithRed:135/255.0 green:206/255.0 blue:1.0 alpha:1.0];
+        [self addSubview:lightView];
+        [lightView release];
+        
+        contentView = [[UIScrollView alloc] initWithFrame:self.bounds];
+        [self addSubview:contentView];
+        contentView.delegate = self;
+        contentView.showsHorizontalScrollIndicator = NO;
+        contentView.showsVerticalScrollIndicator = NO;
+        
+        //默认第一个选中
+        highlightedView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"selected_point.png"]];
+        [self addSubview:highlightedView];
+
+    }
+    return self;
+}
+
+- (void)setTitles:(NSArray *)titles
+{
+
+    if(titles)
+    {
+        [_titles release];
+        _titles = nil;
+        
+        _titles = [titles copy];
+        
+        NSArray *views = contentView.subviews;
+        for (UIView *view in views)
+        {
+            [view removeFromSuperview];
+        }
+        
+        int pointCount = [self pointNeedDraw:_titles.count];
+        float avgPointX = 320.0f / pointCount;
+        //绘制点
+        for (int i = 0 ; i < pointCount ; i++)
+        {
+            float left =  avgPointX * i + (avgPointX - HIGHT_DEFAULT_POINT)/2;
+            UIImageView *defaultPoint = [[UIImageView alloc] initWithFrame:CGRectMake(left, POINTY_LIGHTVIEW + HIGHT_LIGHTVIEW/2.0f - HIGHT_DEFAULT_POINT/2.0f, HIGHT_DEFAULT_POINT, HIGHT_DEFAULT_POINT)];
+            [defaultPoint setImage:[UIImage imageNamed:@"default_point.png"]];
+            [self addSubview:defaultPoint];
+            [defaultPoint release];
+        }
+        
+        //绘制标题
+        for (int i = 0; i < _titles.count; i++)
+        {
+            UIButton *title = [[UIButton alloc] initWithFrame:CGRectMake(320.0f/pointCount * i, 0, 320.0f/pointCount, contentView.frame.size.height)];
+            title.titleLabel.textAlignment = NSTextAlignmentCenter;
+            title.titleLabel.font = TITLE_FONT;
+            title.backgroundColor = [UIColor clearColor];
+            [title setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+            [title setTitle:_titles[i] forState:UIControlStateNormal];
+            [title addTarget:self action:@selector(selectTitle:) forControlEvents:UIControlEventTouchUpInside];
+            [contentView addSubview:title];
+            title.tag = TITLE_TAG + i;
+            [title release];
+        }
+        //设置滚动属性
+        contentView.contentSize = CGSizeMake(_titles.count * 80.0f, 0);
+        [self setHiglight:0];
+        [self bringSubviewToFront:highlightedView];
+        highlightedView.frame = CGRectMake(avgPointX/2.0 - WIDTH_SELECTED_POINT/2.0, (POINTY_LIGHTVIEW - HIGHT_DEFAULT_POINT/2.0f) + HIGHT_DEFAULT_POINT/2.0f - HIGHT_SELECTED_POINT/2.0f , WIDTH_SELECTED_POINT, HIGHT_SELECTED_POINT);
+    }
+    else
+    {
+        NSLog(@"Error titles can not be nil");
+    }
+    
+}
+
+- (void)setSelectedIndex:(int)index
+{
+    if(index < 0 )index = 0;
+    if(index == selectedIndex)return;
+    
+    if(leftIndex == 0 && index < [self pointNeedDraw:_titles.count])
+    {
+        [contentView setContentOffset:CGPointMake( 0, 0) animated:YES];
+    }
+    else if(abs(leftIndex) > index)
+    {
+        [contentView setContentOffset:CGPointMake((abs(leftIndex) - index) * 80.0f, 0) animated:YES];
+    }
+    else if(index+1 >= [self pointNeedDraw:_titles.count] - leftIndex)
+    {
+        [contentView setContentOffset:CGPointMake((index+1 - [self pointNeedDraw:_titles.count]) * 80.0f, 0) animated:YES];
+    }
+
+    int animIndex = 0;
+    if(index + leftIndex < [self pointNeedDraw:_titles.count])
+    {
+        animIndex = index + leftIndex;
+    }      
+    else
+    {
+        animIndex = [self pointNeedDraw:_titles.count] - 1;
+    }
+    animIndex = animIndex < 0 ?  0 : animIndex;
+    int lastCount = selectedIndex+leftIndex < [self pointNeedDraw:_titles.count] ? selectedIndex+leftIndex : [self pointNeedDraw:_titles.count];
+    hightLightIndex = animIndex;
+    [UIView animateWithDuration:0.15 * (abs(animIndex - lastCount) + 1) animations:^{
+        float avgPointX = 320.0f / [self pointNeedDraw:_titles.count];
+        highlightedView.frame = CGRectMake(avgPointX * animIndex + (avgPointX - HIGHT_DEFAULT_POINT)/2 + HIGHT_DEFAULT_POINT/2.0 - WIDTH_SELECTED_POINT/2.0, (POINTY_LIGHTVIEW - HIGHT_DEFAULT_POINT/2.0f) + HIGHT_DEFAULT_POINT/2.0f - HIGHT_SELECTED_POINT/2.0f , WIDTH_SELECTED_POINT, HIGHT_SELECTED_POINT);
+    } completion:^(BOOL finished)
+    {
+        [self setHiglight:index];
+    }];
+
+    selectedIndex = index;
+}
+- (void)selectTitle:(id)sender
+{
+    UIButton *btn = (UIButton*)sender;
+    int index = btn.tag - TITLE_TAG;
+    self.selectedIndex = index;
+    if(delegate && [delegate respondsToSelector:@selector(gmScrollerViewAction:)])
+    {
+        [delegate gmScrollerViewAction:index];
+    }
+}
+
+#pragma mark - scrollerViewDelegate
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+{
+    if(!decelerate)
+    [self viewRefush];
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    [self viewRefush];
+}
+
+- (void)viewRefush
+{
+    float offsetx = contentView.contentOffset.x;
+    float pageF = offsetx / (320.0f/MAX_POINT_COUNT);
+    int page = offsetx / (320/MAX_POINT_COUNT);
+    if(offsetx<0)
+    {
+        leftIndex = 0;
+        self.selectedIndex = 0;
+    }
+    else if(pageF > page)
+    {
+        if (pageF - page > 0.5)
+        {
+            if(++page >= _titles.count - MAX_POINT_COUNT)page = _titles.count - MAX_POINT_COUNT;
+            [contentView setContentOffset:CGPointMake(page *80, 0) animated:YES];
+            leftIndex = - page;
+            self.selectedIndex = page + hightLightIndex;
+        }
+        else
+        {
+            
+            if(page >= _titles.count - MAX_POINT_COUNT)page = _titles.count - MAX_POINT_COUNT;
+            [contentView setContentOffset:CGPointMake(page*80, 0) animated:YES];
+            leftIndex = - page;
+            self.selectedIndex = page + hightLightIndex;
+        }
+    }
+    else
+    {
+        leftIndex = - page;
+        self.selectedIndex = page + hightLightIndex;
+    }
+    if(delegate && [delegate respondsToSelector:@selector(gmScrollerViewAction:)])
+    {
+        [delegate gmScrollerViewAction:page + hightLightIndex];
+    }
+}
+- (void)setHiglight:(int)index
+{
+    UIButton *btn = (UIButton*)[contentView viewWithTag:TITLE_TAG + index];
+    for (UIView *view in contentView.subviews)
+    {
+        if([view isKindOfClass:[UIButton class]])
+        {
+            [(UIButton*)view setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+        }
+    }
+    if(btn)
+    {
+        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    }
+}
+#pragma mark - private moth
+- (int)pointNeedDraw:(int)count
+{
+    return (count > MAX_POINT_COUNT ? MAX_POINT_COUNT:count);
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+- (void)dealloc
+{
+    [contentView release];
+    [super dealloc];
+}
+@end

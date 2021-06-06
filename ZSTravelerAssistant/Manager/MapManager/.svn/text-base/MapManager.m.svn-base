@@ -1,0 +1,770 @@
+//
+//  MapManager.m
+//  ZSTravelerAssistant
+//
+//  Created by 严道秋 on 13-8-21.
+//  Copyright (c) 2013年 com.szmap. All rights reserved.
+//
+#import "TeamManager.h"
+#import "MapManager.h"
+#import "TTSPlayer.h"
+#define DISTANCEFILTER         1.0f      //设置距离筛选器移动距离 1米
+#define DISTANCE_MAX_OffSET_VALUE     30.0  // 最大接受偏移量
+
+static MapManager *manager;
+
+@interface MapManager(Private)
+- (BOOL)containsPoint:(AGSPoint*)point;
+@end
+
+@implementation MapManager
+@synthesize hasSpeaked;
+- (id)init
+{
+    if(self = [super init])
+    {
+        loctaionRegulation = [[LoactionRegulation alloc] init];
+        mapManagerNotifications = [[NSMutableArray alloc] init];
+        _currentScenic = SCENIC_UNKNOW;//初始化位置未知
+        _magneticHeading = -1.0;
+        _trueHeading = -1.0;
+        _headingAccuracy = -1.0;
+        
+        scenicCache = [[NSMutableDictionary alloc] init];
+        locationManager = [[CLLocationManager alloc] init];//定位服务
+        locationManager.delegate = self;
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest;//精度 最优
+        locationManager.distanceFilter = DISTANCEFILTER;
+
+        
+        //钟山风景区 缓冲区
+        [scenicCache setObject:[[DataAccessManager sharedDataModel] getBufferByType:SCENIC_IN] forKey:INTTOOBJ(SCENIC_OUT)];
+        
+        //三大景区 缓冲区
+        [scenicCache setObject:[[DataAccessManager sharedDataModel] getBufferByType:SCENIC_MXL] forKey:INTTOOBJ(SCENIC_MXL)];
+        [scenicCache setObject:[[DataAccessManager sharedDataModel] getBufferByType:SCENIC_LGS] forKey:INTTOOBJ(SCENIC_LGS)];
+        [scenicCache setObject:[[DataAccessManager sharedDataModel] getBufferByType:SCENIC_ZSL] forKey:INTTOOBJ(SCENIC_ZSL)];
+        
+        navCenter = [[NavProcessingCenter alloc] init];
+        navCenter.delegate = self;
+        
+        //保存 已经播报过的id
+        hasSpeaked = [[NSMutableArray alloc] init];
+       
+    }
+    return self;
+}
+
++(id)allocWithZone:(NSZone *)zone
+{
+    @synchronized(self)
+    {
+        if (manager == nil)
+        {
+            manager = [super allocWithZone:zone];
+            return manager;
+        }
+    }
+    return nil;
+}
+
+- (id)retain
+{
+    return self;
+}
+
+- (id)autorelease
+{
+    return self;
+}
++(MapManager *)sharedInstanced
+{
+    @synchronized(self)
+    {
+        if(manager == nil)
+        {
+            manager = [[MapManager alloc] init];
+        }
+    }
+    return manager;
+}   
++(void)freeInstance
+{
+    SAFERELEASE(manager)
+}
+
+
+- (void)registerMapManagerNotification:(id<MapManagerDelegate>)delegate
+{
+    if(delegate)
+    {
+        NSNumber *number = POINT2NUMBER(delegate);
+        if (![mapManagerNotifications containsObject:number])
+        {
+            [mapManagerNotifications addObject:number];
+        }
+        
+    }
+}
+- (void)unRegisterMapManagerNotification:(id<MapManagerDelegate>)delegate
+{
+    if(delegate)
+    {
+        NSNumber *number = POINT2NUMBER(delegate);
+        [mapManagerNotifications removeObject:number];
+    }
+}
+#pragma mark - location
+- (void)startLocation
+{
+    [locationManager startUpdatingLocation]; 
+}
+- (void)stopLocation
+{
+    [locationManager stopUpdatingLocation];
+}
+- (void)cleanLocation
+{
+    _oldLocation2D.longitude = 0.0;
+    _oldLocation2D.latitude = 0.0;
+    _altitude = 0.0;
+    _oldHorizontalAccuracy = 0.0;
+    _magneticHeading = -1.0;
+    _trueHeading = -1.0;
+    _headingAccuracy = -1.0;
+    [loctaionRegulation clean];
+}
+- (void)startUpdateHeading
+{
+    [locationManager startUpdatingHeading];
+}
+- (void)stopUpdateHeading
+{
+    
+    [locationManager stopUpdatingHeading];
+}
+#pragma mark - location delegate
+//定位点刷新
+- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+{
+    
+    LoactionPoint *lp = [[[LoactionPoint alloc] init] autorelease];
+
+    lp.longitude = newLocation.coordinate.longitude;
+    lp.latitude = newLocation.coordinate.latitude;
+    lp.longitude = 118.839912;
+    lp.latitude = 32.055092;
+    lp.altitude = newLocation.altitude;
+    lp.oldHorizontalAccuracy = newLocation.horizontalAccuracy;
+    LoactionPoint *newLp = [loctaionRegulation loctaion:lp];
+    if(!newLp || newLp.longitude == 0.0 || newLp.latitude == 0.0 || newLp.oldHorizontalAccuracy == 0.0)
+    {
+        return;
+    }
+    AGSPoint *newPoint = [AGSPoint pointWithX:newLp.longitude y:newLp.latitude spatialReference:[AGSSpatialReference spatialReferenceWithWKID:4326 WKT:nil]];
+    //添加盲区  
+    
+    
+    LoactionPoint *oldLp = [[[LoactionPoint alloc] init] autorelease];
+    oldLp.longitude = _oldLocation2D.longitude;
+    oldLp.latitude = _oldLocation2D.latitude;
+    oldLp.altitude = _altitude;
+    oldLp.oldHorizontalAccuracy = _oldHorizontalAccuracy;
+    
+    _oldLocation2D.longitude = newLp.longitude;
+    _oldLocation2D.latitude = newLp.latitude;
+    _altitude = newLp.altitude;
+    _oldHorizontalAccuracy = newLp.oldHorizontalAccuracy;
+    
+    //将定位点保存到 沙盒 目录 AppData/Documents/当前日期.txt
+    [PublicUtils saveTestLocation:newLp.longitude withLa:newLp.latitude];
+    
+    SCENIC_TYPE scenic = [self currentScenic:newPoint];
+
+    if(_currentScenic != scenic)
+    {
+        SCENIC_TYPE newType = [self currentScenic:newPoint];
+        
+        if ((_currentScenic == SCENIC_OUT || _currentScenic == SCENIC_UNKNOW) && newType == SCENIC_IN)
+        {
+            //从景区外进入，播报内容
+            NSArray *speakContent = [[DataAccessManager sharedDataModel] getSpeakContentByType:SCENIC_IN];
+            [[TTSPlayer shareInstance] play:ReplaceNULL2Empty([speakContent lastObject]) playMode:TTS_DEFAULT];
+        }
+        else if((_currentScenic == SCENIC_IN || _currentScenic == SCENIC_OUT || _currentScenic == SCENIC_UNKNOW) && newType == SCENIC_LGS)
+        {   //从景区间切入灵谷寺
+            NSArray *speakContent = [[DataAccessManager sharedDataModel] getSpeakContentByType:SCENIC_LGS];
+            if (ISARRYCLASS(speakContent) && speakContent.count > 0)
+            {
+               [[TTSPlayer shareInstance] play:ReplaceNULL2Empty([speakContent objectAtIndex:0]) playMode:TTS_DEFAULT]; 
+            }
+        }
+        else if((_currentScenic == SCENIC_IN || _currentScenic == SCENIC_OUT || _currentScenic == SCENIC_UNKNOW) && newType == SCENIC_ZSL)
+        {   //从景区间切入中山陵
+            NSArray *speakContent = [[DataAccessManager sharedDataModel] getSpeakContentByType:SCENIC_ZSL];
+            if (ISARRYCLASS(speakContent) && speakContent.count > 0)
+            {
+                [[TTSPlayer shareInstance] play:ReplaceNULL2Empty([speakContent objectAtIndex:0]) playMode:TTS_DEFAULT];
+            }
+        }
+        else if((_currentScenic == SCENIC_IN || _currentScenic == SCENIC_OUT || _currentScenic == SCENIC_UNKNOW) && newType == SCENIC_MXL)
+        {   //从景区间切入明孝陵
+            NSArray *speakContent = [[DataAccessManager sharedDataModel] getSpeakContentByType:SCENIC_MXL];
+            if (ISARRYCLASS(speakContent) && speakContent.count > 0)
+            {
+                [[TTSPlayer shareInstance] play:ReplaceNULL2Empty([speakContent objectAtIndex:0]) playMode:TTS_DEFAULT];
+            }
+        }
+        else if((_currentScenic == SCENIC_IN || _currentScenic == SCENIC_MXL || _currentScenic == SCENIC_LGS || _currentScenic == SCENIC_ZSL)&& newType == SCENIC_OUT)
+        {
+            //从风景区内 切出
+//            [[TTSPlayer shareInstance] play:[Language stringWithName:SPEAK_ONE] playMode:TTS_DEFAULT];
+        }
+        else if(_currentScenic == SCENIC_LGS && newType == SCENIC_IN)
+        {
+            // 从灵谷寺切出
+//            [[TTSPlayer shareInstance] play:[Language stringWithName:SPEAK_TWO] playMode:TTS_DEFAULT];
+        }
+        else if(_currentScenic == SCENIC_MXL && newType == SCENIC_IN)
+        {
+            // 从明孝陵切出
+//            [[TTSPlayer shareInstance] play:[Language stringWithName:SPEAK_THREE] playMode:TTS_DEFAULT];
+        }
+        else if(_currentScenic == SCENIC_ZSL && newType == SCENIC_IN)
+        {
+            // 从中山陵切出
+            [[TTSPlayer shareInstance] play:[Language stringWithName:SPEAK_FOUR] playMode:TTS_DEFAULT];
+        }
+        
+        _currentScenic = newType;
+        
+        for(int i = 0;i<mapManagerNotifications.count;i++)
+        {
+            id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+            if(delegate && [delegate respondsToSelector:@selector(didUpdateCurrentSenic:)])
+            {
+                [delegate didUpdateCurrentSenic:_currentScenic];
+            }
+        }
+    }
+    
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didUpdateToLocation:fromLocation:)])
+        {
+            [delegate didUpdateToLocation:newLp fromLocation:oldLp];
+        }
+    }
+
+}
+
+//角度偏移
+-(void)locationManager:(CLLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading
+{
+    _magneticHeading = newHeading.magneticHeading;
+    _trueHeading = newHeading.trueHeading;
+    _headingAccuracy = newHeading.headingAccuracy;
+
+//    NSLog(@"magn=%f",_magneticHeading);
+//    NSLog(@"true=%f",_trueHeading);
+    
+    if (_magneticHeading < 0)
+    {
+        return;
+    }
+    
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didUpdateHeading:)])
+        {
+            [delegate didUpdateHeading:newHeading];
+        }
+    }
+}
+//定位错误
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didUpdateError:)])
+        {
+            [delegate didUpdateError:error];
+        }
+    }
+}
+
+
+#pragma mark - 获取当前所在区域
+- (SCENIC_TYPE)currentScenic:(AGSPoint*)locationPoint
+{
+    @synchronized(self)
+    {
+        SCENIC_TYPE res = SCENIC_OUT;
+        if(!locationPoint || locationPoint.isEmpty)return res;
+        
+        switch (_currentScenic)
+        {
+            case SCENIC_UNKNOW:
+            case SCENIC_OUT: //未知， 则认为风景区外面
+            {
+                if ([self containsPoint:locationPoint withSenic:SCENIC_OUT withBufferIn:YES])//在 钟山风景区内
+                {
+                    
+                    if ([self containsPoint:locationPoint withSenic:SCENIC_ZSL withBufferIn:YES])
+
+                        return SCENIC_ZSL;
+                    
+                    else if ([self containsPoint:locationPoint withSenic:SCENIC_LGS withBufferIn:YES])
+                    
+                        return SCENIC_LGS;
+                    
+                    else if ([self containsPoint:locationPoint withSenic:SCENIC_MXL withBufferIn:YES])
+                    
+                        return SCENIC_MXL;
+                    
+                    else
+                        return SCENIC_IN;
+                    
+                }
+                else
+                {
+                    return SCENIC_OUT;
+                }
+                break;
+            }
+            case SCENIC_IN:
+            {
+                //如果当前点  记录在景区间,首先判断 是否在景区间
+                if([self containsPoint:locationPoint withSenic:SCENIC_OUT withBufferIn:NO])
+                {
+                    if ([self containsPoint:locationPoint withSenic:SCENIC_ZSL withBufferIn:YES])
+                        
+                        return SCENIC_ZSL;
+                    
+                    else if ([self containsPoint:locationPoint withSenic:SCENIC_LGS withBufferIn:YES])
+                        
+                        return SCENIC_LGS;
+                    
+                    else if ([self containsPoint:locationPoint withSenic:SCENIC_MXL withBufferIn:YES])
+                        
+                        return SCENIC_MXL;
+                    
+                    else
+                        return SCENIC_IN;
+                }
+                else
+                {
+                    return SCENIC_OUT;
+                }
+                break;
+            }
+            case SCENIC_LGS:
+            {
+                //如果当前点  记录在灵谷寺,首先判断 是否在灵谷寺
+                if ([self containsPoint:locationPoint withSenic:SCENIC_LGS withBufferIn:NO])
+                {
+                    return SCENIC_LGS;
+                }
+                else
+                {
+                    if ([self containsPoint:locationPoint withSenic:SCENIC_OUT withBufferIn:YES])//在 钟山风景区内
+                    {
+                        
+                        if ([self containsPoint:locationPoint withSenic:SCENIC_ZSL withBufferIn:YES])
+                            
+                            return SCENIC_ZSL;
+                        
+                        else if ([self containsPoint:locationPoint withSenic:SCENIC_MXL withBufferIn:YES])
+                            
+                            return SCENIC_MXL;
+                        
+                        else
+                            return SCENIC_IN;
+                    }
+                    else
+                    {
+                        return SCENIC_OUT;
+                    }
+                }
+                break;
+            }
+            case SCENIC_MXL:
+            {
+                //如果当前点  记录在明孝陵,首先判断 是否在灵谷寺
+                if ([self containsPoint:locationPoint withSenic:SCENIC_MXL withBufferIn:NO])
+                {
+                    return SCENIC_MXL;
+                }
+                else
+                {
+                    if ([self containsPoint:locationPoint withSenic:SCENIC_OUT withBufferIn:YES])//在 钟山风景区内
+                    {
+                        
+                        if ([self containsPoint:locationPoint withSenic:SCENIC_ZSL withBufferIn:YES])
+                            
+                            return SCENIC_ZSL;
+                        
+                        else if ([self containsPoint:locationPoint withSenic:SCENIC_LGS withBufferIn:YES])
+                            
+                            return SCENIC_LGS;
+                        
+                        else
+                            return SCENIC_IN;
+                        
+                    }
+                    else
+                    {
+                        return SCENIC_OUT;
+                    }
+                }
+                break;
+            }
+            case SCENIC_ZSL:
+            {
+                //如果当前点  记录在景区间,首先判断 是否在景区间
+                if([self containsPoint:locationPoint withSenic:SCENIC_ZSL withBufferIn:NO])
+                {
+                    return SCENIC_ZSL;
+                }
+                else
+                {
+                    if ([self containsPoint:locationPoint withSenic:SCENIC_OUT withBufferIn:YES])//在 钟山风景区内
+                    {
+                        
+                        if ([self containsPoint:locationPoint withSenic:SCENIC_ZSL withBufferIn:YES])
+                            
+                            return SCENIC_MXL;
+                        
+                        else if ([self containsPoint:locationPoint withSenic:SCENIC_LGS withBufferIn:YES])
+                            
+                            return SCENIC_LGS;
+                        
+                        else
+                            return SCENIC_IN;
+                    }
+                    else
+                    {
+                        return SCENIC_OUT;
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+
+        return res;
+        
+    }
+
+}
+
+//判断 当前点是否在所指定的景区内
+- (BOOL)containsPoint:(AGSPoint *)point withSenic:(SCENIC_TYPE)type withBufferIn:(BOOL)isIn
+{
+    AGSMutablePolygon *polygon = [[[AGSMutablePolygon alloc] initWithSpatialReference:[AGSSpatialReference spatialReferenceWithWKID:4326 WKT:nil]] autorelease];
+    [polygon addRingToPolygon];
+    
+    ZS_Scenic_Buffer_entity *entity = [scenicCache objectForKey:INTTOOBJ(type)];
+    
+    NSArray*buffer = nil;
+    if (isIn)
+    {
+        buffer = [entity.BufferIn componentsSeparatedByString:@","];
+    }
+    else
+    {
+        buffer = [entity.BufferOut componentsSeparatedByString:@","];
+    }
+    
+    if(!ISARRYCLASS(buffer) || buffer.count == 0 || buffer.count %2 != 0)
+    {
+        NSLog(@"MapManager function containsPoint buffer %d issue!",type);
+    }
+    else
+    {
+        for (int z = 0;z < buffer.count ;z++)
+        {
+            if(z % 2 == 0)
+            {
+                [polygon addPointToRing:[AGSPoint pointWithX:[[buffer objectAtIndex:z] doubleValue] y:[[buffer objectAtIndex:z+1] doubleValue] spatialReference:[AGSSpatialReference spatialReferenceWithWKID:4326 WKT:nil]]];
+            }
+        }
+        
+        return [self containsPoint:polygon withPoint:point];
+    }
+    
+    return NO;
+}
+
+//判断是否在范围内
+- (BOOL)containsPoint:(AGSPolygon*)polygon withPoint:(AGSPoint*)point
+{
+    if(polygon && !point.isEmpty && point != nil)
+    {
+        return [polygon containsPoint:point];
+    }
+    return NO;
+}
+
+
+
+
+
+
+
+- (void)didShowCallout2Spot:(NSString*)spotName
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didShowCallout2Spot:)])
+        {
+            [delegate didShowCallout2Spot:spotName];
+        }
+    }
+}
+
+- (void)didShowCallout2Spot:(NSString*)spotName withPoint:(AGSPoint *)point
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didShowCallout2Spot:withPoint:)])
+        {
+            [delegate didShowCallout2Spot:spotName withPoint:point];
+        }
+    }
+}
+
+- (void)didShowCallout2POI:(NSString*)poiName withPoint:(AGSPoint *)point
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didShowCallout2POI:withPoint:)])
+        {
+            [delegate didShowCallout2POI:poiName withPoint:point];
+        }
+    }
+}
+
+
+#pragma mark - route nav manager
+/*
+ *  单点导航
+ *  endPoi 目的地 navType 0 所在地－停车场－景区入口 1 所在地－观光车站－景区入口 2 所在地－景区入口 simulation 是否为模拟导航
+ */
+- (void)startNavByOne:(PoiPoint*)endPoi withType:(NAV_TYPE)navType simulation:(BOOL)simulation  withBarriers:(NSString*)Barriers
+{
+    navCenter.simulationPtsIndex = 0;
+    [[TTSPlayer shareInstance] stopVideo];
+    [[TTSPlayer shareInstance] play:[Language stringWithName:SPEAK_REQUEST_ROUTE_ING] playMode:TTS_PLAY_JUMP_QUEUE];
+    [navCenter requestNavTo:@[endPoi] withType:navType withSimulation:simulation withBarriers:Barriers];
+}
+
+/*
+ *  多点导航
+ *  pois 目的地 navType 0 所在地－停车场－景区入口 1 所在地－观光车站－景区入口 2 所在地－景区入口 simulation 是否为模拟导航
+ */
+- (void)startNavByMany:(NSArray*)pois withType:(NAV_TYPE)navType simulation:(BOOL)simulation  withBarriers:(NSString*)Barriers
+{
+    navCenter.simulationPtsIndex = 0;
+    [[TTSPlayer shareInstance] stopVideo];
+    [[TTSPlayer shareInstance] play:[Language stringWithName:SPEAK_REQUEST_ROUTE_ING] playMode:TTS_PLAY_JUMP_QUEUE];
+    [navCenter requestNavTo:pois withType:navType withSimulation:simulation withBarriers:Barriers];
+}
+
+- (void)startNav:(NSArray*)pois withType:(NAV_TYPE)navType withBarriers:(NSString*)Barriers
+{
+    navCenter.simulationPtsIndex = 0;
+    [navCenter requestNavTo:pois withType:navType withSimulation:NO withBarriers:Barriers];
+}
+- (void)stopNav
+{
+    [navCenter stopNav];
+    [self reViewMapView];
+}
+/*
+ * points poi坐标串 type 步行、自驾、游览车
+ *  
+ */
+- (void)didShowNavLine:(NSArray *)points withType:(NAV_TYPE)type
+{
+    switch (type)
+    {
+        case NAV_TYPE_WALK:
+        {
+            [navCenter requestWalkRoute:points];
+            break;
+        }
+        case NAV_TYPE_CAR:
+        {
+            [navCenter requestCarRoute:points];
+            break;
+        }
+        case NAV_TYPE_TOUR_CAR:
+        {
+            [navCenter requestTourCarRoute:points];
+            break;
+        }
+        default:
+            break;
+    }
+}
+- (void)cancelRequestNavCenter
+{
+    [navCenter cancelRrequest:self];
+}
+- (void)centeravLine:(id)line withEnvelope:(id)envelope withPoints:(NSArray *)points withType:(int)type
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didNavLine:withEnvelope:withPoints:withType:)])
+        {
+            [delegate didNavLine:line withEnvelope:envelope withPoints:points withType:type];
+        }
+    }
+}
+
+- (void)centerFailed:(int)navType
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(didNavLineFailed:)])
+        {
+            [delegate didNavLineFailed:navType];
+        }
+    }
+}
+
+/**
+ *
+ * center 获取到 路径，画线
+ */
+- (void)centerNavLine:(NSArray *)graphics
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(centerNavLine:)])
+        {
+            [delegate centerNavLine:graphics];
+        }
+    }
+}
+- (void)clearCenterNavLine
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(clearCenterNavLine)])
+        {
+            [delegate clearCenterNavLine];
+        }
+    }
+}
+- (void)reViewMapView
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(reViewMapView)])
+        {
+            [delegate reViewMapView];
+        }
+    }
+}
+- (void)viewNavMapView
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(viewNavMapView)])
+        {
+            [delegate viewNavMapView];
+        }
+    }
+}
+
+- (void)realNavigation
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(realNavigation)])
+        {
+            [delegate realNavigation];
+        }
+    }
+}
+
+- (void)simulation:(double)lon withLat:(double)lat
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(simulation:withLat:)])
+        {
+            [delegate simulation:lon withLat:lat];
+        }
+    }
+}
+
+- (void)changeTarget:(NSString *)currentTarget
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(changeTarget:)])
+        {
+            [delegate changeTarget:currentTarget];
+        }
+    }
+}
+
+- (void)changeDis:(double)targetDis TurnDis:(double)turnDis//下一个目标的信息显示
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(changeDis:TurnDis:)])
+        {
+            [delegate changeDis:targetDis TurnDis:turnDis];
+        }
+    }
+    
+}
+- (void)changeDirections:(MAP_DIRECTION)orientation
+{
+    for(int i = 0;i<mapManagerNotifications.count;i++)
+    {
+        id<MapManagerDelegate> delegate = (id)[[mapManagerNotifications objectAtIndex:i] longValue];
+        if(delegate && [delegate respondsToSelector:@selector(changeDirections:)])
+        {
+            [delegate changeDirections:orientation];
+        }
+    }
+    
+}
+
+//TODO line call back
+- (void)dealloc
+{
+    SAFERELEASE(hasSpeaked)
+    SAFERELEASE(loctaionRegulation)
+    SAFERELEASE(mapManagerNotifications)
+    [self stopLocation];
+    SAFERELEASE(locationManager)
+    [scenicCache removeAllObjects];
+    SAFERELEASE(scenicCache)
+    SAFERELEASE(manager)
+    SAFERELEASE(navCenter)
+    [super dealloc];
+}
+@end

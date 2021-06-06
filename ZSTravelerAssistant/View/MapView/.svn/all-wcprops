@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/IOS/!svn/ver/730/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView
+END
+NavigationView.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/IOS/!svn/ver/722/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavigationView.h
+END
+NavigationPopMoreView.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavigationPopMoreView.h
+END
+NavigationView.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/IOS/!svn/ver/730/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavigationView.m
+END
+NavigationPopMoreView.m
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavigationPopMoreView.m
+END
+NavCenterLineDrawer.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavCenterLineDrawer.h
+END
+NavigationView.xib
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/IOS/!svn/ver/722/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavigationView.xib
+END
+NavCenterLineDrawer.m
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavCenterLineDrawer.m
+END
+NavigationPopMoreView.xib
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/IOS/!svn/ver/680/nj/ZSTrunk_nj/ZSTravelerAssistant/View/MapView/NavigationPopMoreView.xib
+END
